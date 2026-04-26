@@ -1,9 +1,12 @@
 package com.eventhall.service;
 
 import com.eventhall.dto.CreateQuoteRequest;
+import com.eventhall.dto.EventTypeDto;
 import com.eventhall.dto.QuoteResponse;
+import com.eventhall.dto.UpgradeDto;
 import com.eventhall.entity.*;
 import com.eventhall.enums.QuoteStatus;
+import com.eventhall.mapper.QuoteMapper;
 import com.eventhall.repository.*;
 import org.springframework.stereotype.Service;
 
@@ -37,62 +40,39 @@ public class QuoteService {
     }
 
     public QuoteResponse createQuote(CreateQuoteRequest request) {
-
-        // 1. Fetch event type
         EventType eventType = eventTypeRepository.findById(request.eventTypeId())
                 .orElseThrow(() -> new RuntimeException("Event type not found"));
 
-        // 2. Fetch upgrades
         List<Upgrade> upgrades = upgradeRepository.findAllById(request.upgradeIds());
 
-        // 3. Create customer
         Customer customer = new Customer(
                 request.customerName(),
                 request.customerEmail()
         );
         customerRepository.save(customer);
 
-        // 4. Calculate price
         BigDecimal totalPrice = pricingService.calculateTotal(
-                new com.eventhall.dto.EventTypeDto(eventType.getId(), eventType.getName(), eventType.getBasePrice()),
+                toEventTypeDto(eventType),
                 request.guestCount(),
-                upgrades.stream().map(u ->
-                        new com.eventhall.dto.UpgradeDto(
-                                u.getId(),
-                                u.getName(),
-                                u.getDescription(),
-                                u.getCategory(),
-                                u.getPrice(),
-                                u.isActive()
-                        )
-                ).toList()
+                upgrades.stream()
+                        .map(this::toUpgradeDto)
+                        .toList()
         );
 
-        // 5. Create quote
         Quote quote = new Quote(
                 customer,
                 eventType,
                 request.guestCount(),
                 totalPrice
         );
-
         quoteRepository.save(quote);
 
-        // 6. Create quote items
         for (Upgrade upgrade : upgrades) {
-            QuoteItem item = new QuoteItem(quote, upgrade);
-            quoteItemRepository.save(item);
+            quoteItemRepository.save(new QuoteItem(quote, upgrade));
         }
 
-        // 7. Return response
-        return new QuoteResponse(
-                quote.getId(),
-                eventType.getName(),
-                quote.getGuestCount(),
-                upgrades.stream().map(Upgrade::getName).toList(),
-                quote.getTotalPrice(),
-                QuoteStatus.NEW
-        );
+        List<QuoteItem> items = quoteItemRepository.findByQuoteId(quote.getId());
+        return QuoteMapper.toResponse(quote, items);
     }
 
     public QuoteResponse getQuoteById(Long id) {
@@ -100,31 +80,15 @@ public class QuoteService {
                 .orElseThrow(() -> new RuntimeException("Quote not found"));
 
         List<QuoteItem> items = quoteItemRepository.findByQuoteId(id);
-
-        return new QuoteResponse(
-                quote.getId(),
-                quote.getEventType().getName(),
-                quote.getGuestCount(),
-                items.stream().map(i -> i.getUpgrade().getName()).toList(),
-                quote.getTotalPrice(),
-                quote.getStatus()
-        );
+        return QuoteMapper.toResponse(quote, items);
     }
 
     public List<QuoteResponse> getAllQuotes() {
         return quoteRepository.findAll()
                 .stream()
-                .map(q -> {
-                    List<QuoteItem> items = quoteItemRepository.findByQuoteId(q.getId());
-
-                    return new QuoteResponse(
-                            q.getId(),
-                            q.getEventType().getName(),
-                            q.getGuestCount(),
-                            items.stream().map(i -> i.getUpgrade().getName()).toList(),
-                            q.getTotalPrice(),
-                            q.getStatus()
-                    );
+                .map(quote -> {
+                    List<QuoteItem> items = quoteItemRepository.findByQuoteId(quote.getId());
+                    return QuoteMapper.toResponse(quote, items);
                 })
                 .toList();
     }
@@ -137,14 +101,25 @@ public class QuoteService {
         quoteRepository.save(quote);
 
         List<QuoteItem> items = quoteItemRepository.findByQuoteId(id);
+        return QuoteMapper.toResponse(quote, items);
+    }
 
-        return new QuoteResponse(
-                quote.getId(),
-                quote.getEventType().getName(),
-                quote.getGuestCount(),
-                items.stream().map(i -> i.getUpgrade().getName()).toList(),
-                quote.getTotalPrice(),
-                quote.getStatus()
+    private EventTypeDto toEventTypeDto(EventType eventType) {
+        return new EventTypeDto(
+                eventType.getId(),
+                eventType.getName(),
+                eventType.getBasePrice()
+        );
+    }
+
+    private UpgradeDto toUpgradeDto(Upgrade upgrade) {
+        return new UpgradeDto(
+                upgrade.getId(),
+                upgrade.getName(),
+                upgrade.getDescription(),
+                upgrade.getCategory(),
+                upgrade.getPrice(),
+                upgrade.isActive()
         );
     }
 }
