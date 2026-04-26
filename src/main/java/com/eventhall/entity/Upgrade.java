@@ -51,4 +51,22 @@ public class Upgrade {
     public boolean isActive() {
         return active;
     }
+
+    public void updateDetails(
+            String name,
+            String description,
+            String category,
+            BigDecimal price,
+            boolean active
+    ) {
+        this.name = name;
+        this.description = description;
+        this.category = category;
+        this.price = price;
+        this.active = active;
+    }
+
+    public void deactivate() {
+        this.active = false;
+    }
 }
