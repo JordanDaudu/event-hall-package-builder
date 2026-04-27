@@ -43,6 +43,7 @@ public class QuoteController {
      *   "upgradeIds": [1, 2],
      *   "customerName": "Jordan",
      *   "customerEmail": "jordan@example.com"
+     *   "customerPhoneNumber": "0501234567"
      * }
      *
      * @RequestBody converts that JSON into a CreateQuoteRequest record.

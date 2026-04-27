@@ -28,7 +28,8 @@ class QuoteControllerTest {
                   "guestCount": 100,
                   "upgradeIds": [1, 2],
                   "customerName": "Jordan",
-                  "customerEmail": "jordan@example.com"
+                  "customerEmail": "jordan@example.com",
+                  "customerPhoneNumber": "0501234567"
                 }
                 """;
 
@@ -51,7 +52,8 @@ class QuoteControllerTest {
               "guestCount": 0,
               "upgradeIds": null,
               "customerName": "",
-              "customerEmail": "not-an-email"
+              "customerEmail": "not-an-email",
+              "customerPhoneNumber": ""
             }
             """;
 
@@ -63,7 +65,28 @@ class QuoteControllerTest {
                 .andExpect(jsonPath("$.guestCount").value("Guest count must be at least 1"))
                 .andExpect(jsonPath("$.upgradeIds").value("Upgrade IDs list is required"))
                 .andExpect(jsonPath("$.customerName").value("Customer name is required"))
-                .andExpect(jsonPath("$.customerEmail").value("Customer email must be valid"));
+                .andExpect(jsonPath("$.customerEmail").value("Customer email must be valid"))
+                .andExpect(jsonPath("$.customerPhoneNumber").value("Customer phone number is required"));
+    }
+
+    @Test
+    void createQuote_withInvalidPhoneNumber_shouldReturnBadRequest() throws Exception {
+        String requestBody = """
+        {
+          "eventTypeId": 1,
+          "guestCount": 100,
+          "upgradeIds": [1, 2],
+          "customerName": "Jordan",
+          "customerEmail": "jordan@example.com",
+          "customerPhoneNumber": "abc"
+        }
+        """;
+
+        mockMvc.perform(post("/api/quotes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.customerPhoneNumber").value("Customer phone number must be valid"));
     }
 
     @Test
@@ -74,7 +97,8 @@ class QuoteControllerTest {
               "guestCount": 50,
               "upgradeIds": [1],
               "customerName": "Jordan",
-              "customerEmail": "jordan@example.com"
+              "customerEmail": "jordan@example.com",
+              "customerPhoneNumber": "0501234567"
             }
             """;
 
@@ -106,7 +130,8 @@ class QuoteControllerTest {
               "guestCount": 100,
               "upgradeIds": [1, 999],
               "customerName": "Jordan",
-              "customerEmail": "jordan@example.com"
+              "customerEmail": "jordan@example.com",
+              "customerPhoneNumber": "0501234567"
             }
             """;
 
@@ -125,7 +150,8 @@ class QuoteControllerTest {
               "guestCount": 100,
               "upgradeIds": [1, 1],
               "customerName": "Jordan",
-              "customerEmail": "jordan@example.com"
+              "customerEmail": "jordan@example.com",
+              "customerPhoneNumber": "0501234567"
             }
             """;
 
@@ -164,7 +190,8 @@ class QuoteControllerTest {
               "guestCount": 100,
               "upgradeIds": [%d],
               "customerName": "Jordan",
-              "customerEmail": "jordan@example.com"
+              "customerEmail": "jordan@example.com",
+              "customerPhoneNumber": "0501234567"
             }
             """.formatted(upgradeId.longValue());
 

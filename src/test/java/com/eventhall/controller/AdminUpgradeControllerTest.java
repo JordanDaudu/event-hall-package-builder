@@ -68,4 +68,22 @@ class AdminUpgradeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].name", not(hasItems("Updated Upgrade"))));
     }
+
+    @Test
+    void getAllUpgradesForAdmin_shouldReturnActiveAndInactiveUpgrades() throws Exception {
+        // Soft delete an existing seeded upgrade.
+        mockMvc.perform(delete("/api/admin/upgrades/4"))
+                .andExpect(status().isOk());
+
+        // Public endpoint should hide inactive upgrade.
+        mockMvc.perform(get("/api/upgrades"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].name", not(hasItems("Live Plants"))));
+
+        // Admin endpoint should still show inactive upgrade.
+        mockMvc.perform(get("/api/admin/upgrades"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].name", hasItems("Live Plants")))
+                .andExpect(jsonPath("$[?(@.name == 'Live Plants')].active", hasItems(false)));
+    }
 }

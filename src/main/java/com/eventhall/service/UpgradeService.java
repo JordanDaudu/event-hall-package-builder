@@ -36,6 +36,16 @@ public class UpgradeService {
     }
 
     /*
+     * Returns all upgrades for the Admin UI
+     */
+    public List<UpgradeDto> getAllUpgradesForAdmin() {
+        return upgradeRepository.findAll()
+                .stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    /*
      * Returns active upgrades by ids.
      *
      * This method is not currently used by QuoteService, but it is useful design

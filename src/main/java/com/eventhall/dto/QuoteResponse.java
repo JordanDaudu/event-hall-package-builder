@@ -19,6 +19,9 @@ import java.util.List;
  */
 public record QuoteResponse(
         Long id,
+        String customerName,
+        String customerEmail,
+        String customerPhoneNumber,
         String eventTypeName,
         int guestCount,
         List<String> upgrades,

@@ -33,6 +33,7 @@ public class Customer {
      */
     private String name;
     private String email;
+    private String phoneNumber;
 
     /*
      * Required by JPA.
@@ -52,9 +53,10 @@ public class Customer {
      *
      * We do not set id manually because the database generates it.
      */
-    public Customer(String name, String email) {
+    public Customer(String name, String email, String phoneNumber) {
         this.name = name;
         this.email = email;
+        this.phoneNumber = phoneNumber;
     }
 
     public Long getId() {
@@ -67,5 +69,9 @@ public class Customer {
 
     public String getEmail() {
         return email;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
     }
 }

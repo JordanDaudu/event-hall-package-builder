@@ -7,6 +7,8 @@ import com.eventhall.service.UpgradeService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /*
  * Controller for admin upgrade management.
  *
@@ -33,6 +35,22 @@ public class AdminUpgradeController {
 
     public AdminUpgradeController(UpgradeService upgradeService) {
         this.upgradeService = upgradeService;
+    }
+
+    /*
+     * Handles:
+     * GET /api/admin/upgrades
+     *
+     * Returns all upgrades for admin management.
+     * Unlike the public GET /api/upgrades endpoint, this includes both:
+     * - active upgrades
+     * - inactive upgrades
+     *
+     * This is needed so the admin can see disabled upgrades and enable them again later.
+     */
+    @GetMapping
+    public List<UpgradeDto> getAllUpgradesForAdmin() {
+        return upgradeService.getAllUpgradesForAdmin();
     }
 
     /*

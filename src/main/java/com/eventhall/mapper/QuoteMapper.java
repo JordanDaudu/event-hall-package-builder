@@ -29,6 +29,9 @@ public class QuoteMapper {
     public static QuoteResponse toResponse(Quote quote, List<QuoteItem> items) {
         return new QuoteResponse(
                 quote.getId(),
+                quote.getCustomer().getName(),
+                quote.getCustomer().getEmail(),
+                quote.getCustomer().getPhoneNumber(),
                 quote.getEventType().getName(),
                 quote.getGuestCount(),
 

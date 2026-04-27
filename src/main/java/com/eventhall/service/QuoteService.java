@@ -101,7 +101,8 @@ public class QuoteService {
          */
         Customer customer = new Customer(
                 request.customerName(),
-                request.customerEmail()
+                request.customerEmail(),
+                request.customerPhoneNumber()
         );
         customerRepository.save(customer);
 

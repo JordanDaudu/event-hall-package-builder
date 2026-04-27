@@ -99,7 +99,8 @@ class AdminQuoteControllerTest {
                                   "guestCount": 100,
                                   "upgradeIds": [1, 2],
                                   "customerName": "Jordan",
-                                  "customerEmail": "jordan@example.com"
+                                  "customerEmail": "jordan@example.com",
+                                  "customerPhoneNumber": "0501234567"
                                 }
                                 """))
                 .andExpect(status().isOk())
