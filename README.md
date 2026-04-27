@@ -114,21 +114,25 @@ Screenshots should be placed in:
 assets/screenshots/
 ```
 
+### Home
+
+![Package Builder](./assets/screenshots/Home.png)
+
 ### Package Builder
 
-![Package Builder](./assets/screenshots/package-builder.png)
+![Package Builder](./assets/screenshots/Package-Builder.png)
 
 ### Quote Summary
 
-![Quote Summary](./assets/screenshots/quote-summary.png)
+![Quote Summary](./assets/screenshots/Quote-Summary.png)
 
 ### Admin Quotes
 
-![Admin Quotes](./assets/screenshots/admin-quotes.png)
+![Admin Quotes](./assets/screenshots/Admin-Quotes.png)
 
 ### Admin Upgrades
 
-![Admin Upgrades](./assets/screenshots/admin-upgrades.png)
+![Admin Upgrades](./assets/screenshots/Admin-Upgrades.png)
 
 ---
 
