@@ -5,8 +5,12 @@ on:
   pull_request:
 
 jobs:
-  build:
+  backend-tests:
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
 
     steps:
       - name: Checkout code
@@ -18,5 +22,5 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Build and test
-        run: mvn -B test
+      - name: Run backend tests
+        run: ./mvnw test

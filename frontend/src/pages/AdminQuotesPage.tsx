@@ -35,36 +35,43 @@ function AdminQuotesPage() {
     }
 
     return (
-        <div>
+        <main className="page">
             <h1>Admin Quotes</h1>
 
-            <label>
-                Filter by status:{" "}
-                <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-                >
-                    <option value="ALL">ALL</option>
-                    <option value="NEW">NEW</option>
-                    <option value="CONTACTED">CONTACTED</option>
-                    <option value="APPROVED">APPROVED</option>
-                    <option value="REJECTED">REJECTED</option>
-                </select>
-            </label>
+            <section className="card">
+                <label>
+                    Filter by status{" "}
+                    <select
+                        className="select"
+                        value={statusFilter}
+                        onChange={(event) =>
+                            setStatusFilter(event.target.value as StatusFilter)
+                        }
+                    >
+                        <option value="ALL">ALL</option>
+                        <option value="NEW">NEW</option>
+                        <option value="CONTACTED">CONTACTED</option>
+                        <option value="APPROVED">APPROVED</option>
+                        <option value="REJECTED">REJECTED</option>
+                    </select>
+                </label>
+            </section>
 
             {loading ? (
                 <p>Loading quotes...</p>
             ) : quotes.length === 0 ? (
-                <p>No quotes found.</p>
+                <section className="card">
+                    <p>No quotes found.</p>
+                </section>
             ) : (
                 quotes.map((quote) => (
-                    <div
-                        key={quote.id}
-                        style={{ border: "1px solid gray", margin: "10px", padding: "10px" }}
-                    >
+                    <section key={quote.id} className="card">
                         <p>
                             <strong>ID:</strong> {quote.id}
                         </p>
+
+                        <h2>Customer</h2>
+
                         <p>
                             <strong>Name:</strong> {quote.customerName}
                         </p>
@@ -74,6 +81,9 @@ function AdminQuotesPage() {
                         <p>
                             <strong>Phone:</strong> {quote.customerPhoneNumber || "N/A"}
                         </p>
+
+                        <h2>Event</h2>
+
                         <p>
                             <strong>Event:</strong> {quote.eventTypeName}
                         </p>
@@ -84,12 +94,20 @@ function AdminQuotesPage() {
                             <strong>Total:</strong> {quote.totalPrice}
                         </p>
 
+                        <p>
+                            <strong>Status:</strong>{" "}
+                            <span className={`badge badge-${quote.status.toLowerCase()}`}>
+                            {quote.status}
+                        </span>
+                        </p>
+
                         <select
+                            className="select"
                             value={quote.status}
-                            onChange={(e) =>
+                            onChange={(event) =>
                                 handleStatusChange(
                                     quote.id,
-                                    e.target.value as QuoteResponse["status"]
+                                    event.target.value as QuoteResponse["status"]
                                 )
                             }
                         >
@@ -98,10 +116,10 @@ function AdminQuotesPage() {
                             <option value="APPROVED">APPROVED</option>
                             <option value="REJECTED">REJECTED</option>
                         </select>
-                    </div>
+                    </section>
                 ))
             )}
-        </div>
+        </main>
     );
 }
 

@@ -17,6 +17,7 @@ function PackageBuilderPage() {
     const [selectedEventTypeId, setSelectedEventTypeId] = useState<number | "">("");
     const [guestCount, setGuestCount] = useState<number>(1);
     const [selectedUpgradeIds, setSelectedUpgradeIds] = useState<number[]>([]);
+    const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
 
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -41,6 +42,14 @@ function PackageBuilderPage() {
 
         loadBuilderData();
     }, []);
+
+    const categories = Array.from(
+        new Set(upgrades.map((upgrade) => upgrade.category))
+    );
+
+    const visibleUpgrades = upgrades.filter(
+        (upgrade) => categoryFilter === "ALL" || upgrade.category === categoryFilter
+    );
 
     const selectedEventType = eventTypes.find(
         (eventType) => eventType.id === selectedEventTypeId
@@ -89,9 +98,9 @@ function PackageBuilderPage() {
                 eventTypeId: selectedEventTypeId,
                 guestCount,
                 upgradeIds: selectedUpgradeIds,
-                customerName: customerName,
-                customerEmail: customerEmail,
-                customerPhoneNumber: customerPhoneNumber
+                customerName,
+                customerEmail,
+                customerPhoneNumber,
             });
 
             navigate(`/quote/${quote.id}`);
@@ -111,92 +120,115 @@ function PackageBuilderPage() {
     }
 
     return (
-        <div>
-            <h1>Package Builder Page</h1>
+        <main className="page">
+            <h1>Package Builder</h1>
 
-            <section>
-                <h2>Choose Event Type</h2>
+            <section className="card">
+                <h2>Event Details</h2>
 
-                <select
-                    value={selectedEventTypeId}
-                    onChange={(event) =>
-                        setSelectedEventTypeId(Number(event.target.value))
-                    }
-                >
-                    <option value="">Select event type</option>
+                <label>
+                    Event Type
+                    <select
+                        className="select"
+                        value={selectedEventTypeId}
+                        onChange={(event) =>
+                            setSelectedEventTypeId(Number(event.target.value))
+                        }
+                    >
+                        <option value="">Select event type</option>
 
-                    {eventTypes.map((eventType) => (
-                        <option key={eventType.id} value={eventType.id}>
-                            {eventType.name} — {eventType.basePrice} per guest
-                        </option>
-                    ))}
-                </select>
+                        {eventTypes.map((eventType) => (
+                            <option key={eventType.id} value={eventType.id}>
+                                {eventType.name} — {eventType.basePrice} per guest
+                            </option>
+                        ))}
+                    </select>
+                </label>
+
+                <label>
+                    Guest Count
+                    <input
+                        className="input"
+                        type="number"
+                        min="1"
+                        value={guestCount}
+                        onChange={(event) => setGuestCount(Number(event.target.value))}
+                    />
+                </label>
             </section>
 
-            <section>
-                <h2>Guest Count</h2>
-
-                <input
-                    type="number"
-                    min="1"
-                    value={guestCount}
-                    onChange={(event) => setGuestCount(Number(event.target.value))}
-                />
-            </section>
-
-            <section>
+            <section className="card">
                 <h2>Choose Upgrades</h2>
 
-                {upgrades.map((upgrade) => (
-                    <label key={upgrade.id} style={{ display: "block" }}>
+                <label>
+                    Filter by Category
+                    <select
+                        className="select"
+                        value={categoryFilter}
+                        onChange={(event) => setCategoryFilter(event.target.value)}
+                    >
+                        <option value="ALL">ALL</option>
+
+                        {categories.map((category) => (
+                            <option key={category} value={category}>
+                                {category}
+                            </option>
+                        ))}
+                    </select>
+                </label>
+
+                {visibleUpgrades.map((upgrade) => (
+                    <label key={upgrade.id} style={{ display: "block", margin: "8px 0" }}>
                         <input
                             type="checkbox"
                             checked={selectedUpgradeIds.includes(upgrade.id)}
                             onChange={() => toggleUpgrade(upgrade.id)}
                         />
-                        {upgrade.name} — {upgrade.price}
+                        {" "}
+                        {upgrade.name} — {upgrade.price.toLocaleString()}
                     </label>
                 ))}
             </section>
 
-            <section>
-                <h2>Estimated Total</h2>
-                <p>{estimatedTotal}</p>
-            </section>
-
-            <section>
+            <section className="card">
                 <h2>Customer Details</h2>
 
                 <input
+                    className="input"
                     type="text"
                     placeholder="Your Name"
                     value={customerName}
                     onChange={(event) => setCustomerName(event.target.value)}
                 />
 
-                <br />
-
                 <input
+                    className="input"
                     type="email"
                     placeholder="Your Email"
                     value={customerEmail}
                     onChange={(event) => setCustomerEmail(event.target.value)}
                 />
 
-                <br />
-
                 <input
+                    className="input"
                     type="text"
                     placeholder="Phone Number"
                     value={customerPhoneNumber}
-                    onChange={(e) => setCustomerPhoneNumber(e.target.value)}
+                    onChange={(event) => setCustomerPhoneNumber(event.target.value)}
                 />
             </section>
 
-            <button onClick={handleSubmit} disabled={submitting}>
-                {submitting ? "Submitting..." : "Submit Quote"}
-            </button>
-        </div>
+            <section className="card">
+                <h2>Estimated Total</h2>
+                <p>
+                    <strong>{estimatedTotal.toLocaleString()}</strong>
+                </p>
+
+                <button className="button" onClick={handleSubmit} disabled={submitting}>
+                    {submitting ? "Submitting..." : "Submit Quote"}
+                </button>
+            </section>
+        </main>
     );
 }
 

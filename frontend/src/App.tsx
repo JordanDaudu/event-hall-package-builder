@@ -8,11 +8,13 @@ import AdminUpgradesPage from "./pages/AdminUpgradesPage";
 function App() {
     return (
         <BrowserRouter>
-            <nav>
-                <Link to="/">Home</Link> |{" "}
-                <Link to="/builder">Package Builder</Link> |{" "}
-                <Link to="/admin/quotes">Admin Quotes</Link> |{" "}
-                <Link to="/admin/upgrades">Admin Upgrades</Link>
+            <nav className="navbar">
+                <div className="navbar-inner">
+                    <Link to="/">Home</Link>
+                    <Link to="/builder">Package Builder</Link>
+                    <Link to="/admin/quotes">Admin Quotes</Link>
+                    <Link to="/admin/upgrades">Admin Upgrades</Link>
+                </div>
             </nav>
 
             <Routes>

@@ -1,10 +1,31 @@
-HELP.md
-target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+# =========================================
+# General
+# =========================================
+.DS_Store
+Thumbs.db
+*.log
 
-### STS ###
+# =========================================
+# Environment / Secrets
+# =========================================
+.env
+.env.*
+!.env.example
+
+# =========================================
+# IDE / Editors
+# =========================================
+
+## IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+## VS Code
+.vscode/
+
+## Eclipse / STS
 .apt_generated
 .classpath
 .factorypath
@@ -13,45 +34,55 @@ target/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
+## NetBeans
 /nbproject/private/
 /nbbuild/
-/dist/
 /nbdist/
 /.nb-gradle/
+
+# =========================================
+# Backend (Spring Boot / Maven)
+# =========================================
+
+## Build output
+backend/target/
+target/
+
+## Maven wrapper
+backend/.mvn/wrapper/maven-wrapper.jar
+
+## Allow nested targets (rare edge case)
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+## Local config
+backend/application-local.properties
+
+# =========================================
+# Frontend (React / Vite)
+# =========================================
+
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.*
+
+# =========================================
+# Build (general fallback)
+# =========================================
 build/
+dist/
+
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
-.vscode/
-
-### OS files ###
-.DS_Store
-Thumbs.db
-
-### Logs ###
-*.log
-
-### Environment / secrets ###
-.env
-.env.*
-!.env.example
-### Local database / Docker volumes ###
+# =========================================
+# Docker / Local Data
+# =========================================
 data/
 postgres-data/
 
-### Local app config ###
-application-local.properties
-
-# Frontend
-eventhall-frontend/node_modules/
-eventhall-frontend/dist/
-eventhall-frontend/.env
-eventhall-frontend/.env.*
+# =========================================
+# Misc
+# =========================================
+HELP.md
