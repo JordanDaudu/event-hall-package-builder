@@ -49,3 +49,9 @@ postgres-data/
 
 ### Local app config ###
 application-local.properties
+
+# Frontend
+eventhall-frontend/node_modules/
+eventhall-frontend/dist/
+eventhall-frontend/.env
+eventhall-frontend/.env.*
