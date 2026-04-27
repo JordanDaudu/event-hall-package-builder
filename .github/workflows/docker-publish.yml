@@ -11,8 +11,8 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/eventhall-backend
-  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/eventhall-frontend
+  BACKEND_IMAGE: ghcr.io/jordandaudu/eventhall-backend
+  FRONTEND_IMAGE: ghcr.io/jordandaudu/eventhall-frontend
 
 jobs:
   test-and-publish:
