@@ -8,7 +8,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-// Exposes upgrade-related API endpoints.
+/*
+ * Public upgrade controller.
+ *
+ * This is used by the customer package builder page.
+ * Customers should only see active upgrades.
+ * Inactive upgrades are hidden because they were soft-deleted or disabled by admin.
+ */
 @RestController
 @RequestMapping("/api/upgrades")
 public class UpgradeController {
@@ -19,7 +25,13 @@ public class UpgradeController {
         this.upgradeService = upgradeService;
     }
 
-    // Handles: GET /api/upgrades
+    /*
+     * Handles:
+     * GET /api/upgrades
+     *
+     * Returns active upgrades as DTOs.
+     * The frontend uses this list to show selectable package add-ons.
+     */
     @GetMapping
     public List<UpgradeDto> getAllUpgrades() {
         return upgradeService.getAllUpgrades();

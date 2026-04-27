@@ -9,6 +9,14 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
+/*
+ * DataInitializer seeds starter data into the database when the app starts.
+ *
+ * This is useful in the MVP because the frontend needs event types and upgrades
+ * to already exist before a customer can build a package.
+ *
+ * @Component tells Spring to create this class as a Spring-managed object.
+ */
 @Component
 public class DataInitializer implements CommandLineRunner {
 
@@ -23,8 +31,18 @@ public class DataInitializer implements CommandLineRunner {
         this.upgradeRepository = upgradeRepository;
     }
 
+    /*
+     * CommandLineRunner.run(...) executes after the Spring application starts.
+     *
+     * This makes it a simple place to insert starter records into the database.
+     * Later, professional projects often replace this with migrations such as Flyway.
+     */
     @Override
     public void run(String... args) {
+        /*
+         * Only seed event types if the table is empty.
+         * This prevents duplicate rows every time the app restarts.
+         */
         if (eventTypeRepository.count() == 0) {
             eventTypeRepository.save(new EventType("Wedding", BigDecimal.valueOf(120)));
             eventTypeRepository.save(new EventType("Birthday", BigDecimal.valueOf(80)));
@@ -32,6 +50,10 @@ public class DataInitializer implements CommandLineRunner {
             eventTypeRepository.save(new EventType("Bar/Bat Mitzvah", BigDecimal.valueOf(90)));
         }
 
+        /*
+         * Only seed upgrades if the table is empty.
+         * Each upgrade starts as active = true so customers can see it.
+         */
         if (upgradeRepository.count() == 0) {
             upgradeRepository.save(new Upgrade("Flowers", "Premium flower arrangements", "Decor", BigDecimal.valueOf(2500), true));
             upgradeRepository.save(new Upgrade("DJ", "Professional DJ service", "Entertainment", BigDecimal.valueOf(3500), true));

@@ -8,21 +8,37 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-// @RestController means this class exposes HTTP API endpoints.
-// The return values are automatically converted to JSON.
+/*
+ * Controller for public event type endpoints.
+ *
+ * Event types are the base package categories customers can choose from,
+ * such as Wedding, Birthday, Corporate Event, or Bar/Bat Mitzvah.
+ */
 @RestController
 @RequestMapping("/api/event-types")
 public class EventTypeController {
 
+    /*
+     * The controller depends on the service, not directly on the repository.
+     *
+     * This keeps the controller focused on HTTP input/output.
+     * The service handles application logic and data conversion.
+     */
     private final EventTypeService eventTypeService;
 
-    // Constructor injection:
-    // Spring automatically gives us the EventTypeService object.
     public EventTypeController(EventTypeService eventTypeService) {
         this.eventTypeService = eventTypeService;
     }
 
-    // Handles: GET /api/event-types
+    /*
+     * Handles:
+     * GET /api/event-types
+     *
+     * @GetMapping means this method responds to HTTP GET requests.
+     *
+     * Returning List<EventTypeDto> means Spring will automatically convert
+     * the Java list into a JSON array for the frontend.
+     */
     @GetMapping
     public List<EventTypeDto> getAllEventTypes() {
         return eventTypeService.getAllEventTypes();
