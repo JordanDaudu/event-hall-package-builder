@@ -158,6 +158,11 @@ function PackageBuilderPage() {
                 </label>
             </section>
 
+            <HallPreview
+                selectedEventType={selectedEventType}
+                selectedUpgrades={selectedUpgrades}
+            />
+
             <section className="card">
                 <h2>Choose Upgrades</h2>
 
@@ -190,11 +195,6 @@ function PackageBuilderPage() {
                     </label>
                 ))}
             </section>
-
-            <HallPreview
-                selectedEventType={selectedEventType}
-                selectedUpgrades={selectedUpgrades}
-            />
 
             <section className="card">
                 <h2>Customer Details</h2>
