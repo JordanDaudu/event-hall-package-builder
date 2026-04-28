@@ -4,6 +4,7 @@ import { getEventTypes } from "../api/eventTypeApi";
 import { getUpgrades } from "../api/upgradeApi";
 import { createQuote } from "../api/quoteApi";
 import type { EventType, Upgrade } from "../types/api";
+import HallPreview from "../components/HallPreview";
 
 function PackageBuilderPage() {
     const navigate = useNavigate();
@@ -189,6 +190,11 @@ function PackageBuilderPage() {
                     </label>
                 ))}
             </section>
+
+            <HallPreview
+                selectedEventType={selectedEventType}
+                selectedUpgrades={selectedUpgrades}
+            />
 
             <section className="card">
                 <h2>Customer Details</h2>
