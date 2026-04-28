@@ -1,53 +1,51 @@
 # Event Hall Package Builder
 
-A full-stack portfolio project that allows customers to build event hall packages, submit quote requests, and lets admins manage quotes and upgrade options.
+A full-stack portfolio project for building and managing event hall packages, including customer quote requests, admin management, and business analytics.
 
 ---
 
 ## Overview
 
-Event Hall Package Builder is a full-stack web application built to practice professional backend and frontend development.
+Event Hall Package Builder is a full-stack application designed to simulate a real-world business system for event halls.
 
-Customers can select an event type, enter a guest count, choose upgrades, see a live price preview, and submit a quote request.
-
-Admins can view submitted quotes, filter quotes by status, update quote statuses, and manage available upgrades.
+Customers can build event packages and request quotes, while admins can manage quotes, upgrades, and track business performance through a dashboard.
 
 ---
 
-## Features
+## Key Features
 
-### Customer Features
+### Customer
 
 - Select event type
 - Enter guest count
-- Filter upgrades by category
-- Select package upgrades
+- Choose upgrades filtered by category
 - View live price preview
-- Enter customer details:
-  - Name
-  - Email
-  - Phone number
 - Submit quote request
-- View quote summary page
+- View quote summary
 
-### Admin Features
+### Admin
 
-- View all submitted quotes
-- Filter quotes by status
+- View and filter quotes
 - Update quote status:
   - NEW
   - CONTACTED
   - APPROVED
   - REJECTED
-- View all upgrades, including inactive upgrades
-- Create new upgrades
-- Edit upgrade details:
-  - Name
-  - Description
-  - Category
-  - Price
-- Enable or disable upgrades using soft delete
-- Filter upgrades by category and active status
+- Manage upgrades:
+  - Create
+  - Edit
+  - Enable / disable
+- Soft delete upgrades using the `active` flag
+- Filter upgrades by category and status
+
+### Analytics Dashboard
+
+- Total quotes
+- Approved quotes
+- Conversion rate
+- Monthly revenue
+- Revenue by event type
+- Most selected upgrades
 
 ---
 
@@ -72,12 +70,14 @@ Admins can view submitted quotes, filter quotes by status, update quote statuses
 - Axios
 - React Router
 
-### Testing and CI
+### Testing and CI/CD
 
 - JUnit
 - MockMvc
 - H2 test database
 - GitHub Actions
+- Docker
+- GitHub Container Registry
 
 ---
 
@@ -85,13 +85,13 @@ Admins can view submitted quotes, filter quotes by status, update quote statuses
 
 ```text
 React Frontend
-    ↓ REST API calls
+    ↓ REST API
 Spring Boot Backend
     ↓ Spring Data JPA
 PostgreSQL Database
 ```
 
-Backend structure follows a layered architecture:
+Backend structure:
 
 ```text
 controller
@@ -116,7 +116,7 @@ assets/screenshots/
 
 ### Home
 
-![Package Builder](./assets/screenshots/Home.png)
+![Home](./assets/screenshots/Home.png)
 
 ### Package Builder
 
@@ -125,6 +125,10 @@ assets/screenshots/
 ### Quote Summary
 
 ![Quote Summary](./assets/screenshots/Quote-Summary.png)
+
+### Admin Dashboard
+
+![Admin Dashboard](./assets/screenshots/Admin-Dashboard.png)
 
 ### Admin Quotes
 
@@ -174,6 +178,12 @@ PUT    /api/admin/upgrades/{id}
 DELETE /api/admin/upgrades/{id}
 ```
 
+### Admin Dashboard Endpoint
+
+```text
+GET /api/admin/dashboard?year=2026
+```
+
 ---
 
 ## Pricing Rule
@@ -188,18 +198,69 @@ Total Price = (Event Type Base Price × Guest Count) + Selected Upgrades Total
 
 ---
 
-## Getting Started
+## Docker Setup
 
-### Prerequisites
+Docker is the recommended way to run the project locally.
 
-- Java 21
-- Node.js
-- npm
-- PostgreSQL
+Run the full stack:
+
+```bash
+docker-compose up --build
+```
+
+Frontend:
+
+```text
+http://localhost:5173
+```
+
+Backend:
+
+```text
+http://localhost:8080
+```
+
+Stop the application:
+
+```bash
+docker-compose down
+```
+
+Reset the database volume:
+
+```bash
+docker-compose down -v
+```
 
 ---
 
-## Backend Setup
+## Run Using Prebuilt Images
+
+The project can also run using prebuilt private Docker images from GitHub Container Registry.
+
+Login to GHCR:
+
+```bash
+docker login ghcr.io
+```
+
+Then run:
+
+```bash
+docker compose -f docker-compose.images.yml up
+```
+
+Pull latest images:
+
+```bash
+docker compose -f docker-compose.images.yml pull
+```
+
+---
+
+## Manual Local Development
+
+### Backend
 
 Create a PostgreSQL database:
 
@@ -215,7 +276,7 @@ SPRING_DATASOURCE_USERNAME=postgres
 SPRING_DATASOURCE_PASSWORD=your_password
 ```
 
-Run the backend:
+Run backend:
 
 ```bash
 cd backend
@@ -228,23 +289,16 @@ Backend runs on:
 http://localhost:8080
 ```
 
----
-
-## Frontend Setup
-
-Go into the frontend folder:
-
-```bash
-cd frontend
-```
+### Frontend
 
 Install dependencies:
 
 ```bash
+cd frontend
 npm install
 ```
 
-Run the frontend:
+Run frontend:
 
 ```bash
 npm run dev
@@ -271,9 +325,16 @@ The test profile uses an H2 in-memory database, so tests do not require PostgreS
 
 ---
 
-## CI
+## CI/CD
 
-GitHub Actions runs tests automatically on push and pull request.
+GitHub Actions runs automatically on push.
+
+The pipeline:
+
+- Runs backend tests
+- Builds the frontend
+- Builds Docker images for ARM64 and AMD64
+- Pushes private images to GitHub Container Registry
 
 ---
 
@@ -284,14 +345,13 @@ GitHub Actions runs tests automatically on push and pull request.
 - Authentication will be added in a later version.
 - Upgrade deletion is implemented as soft delete using the `active` field.
 - Inactive upgrades are hidden from customers but visible to admins.
+- Revenue statistics are based on `approvedAt`, not quote creation time.
 
 ---
 
-## V1 Status
+## Project Status
 
-V1 MVP is complete.
-
-Completed:
+### V1 Complete
 
 - Spring Boot backend
 - PostgreSQL database integration
@@ -303,29 +363,65 @@ Completed:
 - Testing and CI
 - Basic UI polish
 
+### V1.5 Current
+
+- Dockerized full stack
+- Private GHCR image publishing
+- Admin dashboard
+- Business analytics
+- Improved admin UI
+- Multi-architecture Docker builds
+
 ---
 
-## Future Improvements
+## Roadmap
 
-### V1.5
+### V1.6
 
-- Better UI and responsive design
-- Dashboard statistics
-- Search and sorting
-- Better error handling
-- Docker Compose
-- Deployment
+- Cloud deployment
+- Managed PostgreSQL
+- Environment-based production configuration
+- Backup strategy
+
+### V1.7
+
+- Product readiness
+- Pricing tiers
+- Client onboarding flow
+- Branding per client
 
 ### V2
 
 - Authentication
 - Admin login
 - Customer accounts
-- Email notifications
-- File/image uploads for upgrades
+- Client isolation
+
+### V2.5
+
+- React Native / Expo mobile app
+- Same backend API
+- Client-owned Apple Developer account support
 
 ### V3
 
-- React Native / Expo mobile version
-- Same Spring Boot backend
-- Same PostgreSQL database
+- SaaS / licensing system
+- Multi-client management
+- Automated provisioning
+- Billing and subscriptions
+- Monitoring and backup/restore process
+
+---
+
+## Key Concepts Practiced
+
+- REST API design
+- Layered backend architecture
+- JPA relationships
+- DTO mapping
+- Validation
+- Exception handling
+- Docker Compose
+- CI/CD pipelines
+- Private Docker image distribution
+- Business analytics

@@ -4,6 +4,7 @@ import com.eventhall.entity.Quote;
 import com.eventhall.enums.QuoteStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /*
@@ -23,4 +24,6 @@ public interface QuoteRepository extends JpaRepository<Quote, Long> {
      * GET /api/admin/quotes?status=CONTACTED
      */
     List<Quote> findByStatus(QuoteStatus status);
+
+    List<Quote> findByApprovedAtBetween(LocalDateTime start, LocalDateTime end);
 }

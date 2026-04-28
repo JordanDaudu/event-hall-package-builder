@@ -20,6 +20,10 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/eventhall_db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+
+      BUSINESS_NAME: Event Hall Demo
+      BUSINESS_CONTACT_EMAIL: contact@example.com
+      BUSINESS_CONTACT_PHONE: 0500000000
     ports:
       - "8080:8080"
 

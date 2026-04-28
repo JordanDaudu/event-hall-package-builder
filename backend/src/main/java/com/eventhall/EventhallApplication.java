@@ -1,6 +1,8 @@
 package com.eventhall;
 
 import org.springframework.boot.SpringApplication;
+import com.eventhall.config.BusinessConfig;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /*
@@ -12,6 +14,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * - Spring creates the objects it needs and connects them together using dependency injection.
  */
 @SpringBootApplication
+@EnableConfigurationProperties(BusinessConfig.class)
 public class EventhallApplication {
 
 	public static void main(String[] args) {

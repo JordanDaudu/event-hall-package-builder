@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /*
  * Entity for quote requests.
@@ -30,6 +32,8 @@ public class Quote {
     private BigDecimal totalPrice;
 
     private LocalDateTime createdAt;
+
+    private LocalDateTime approvedAt;
 
     /*
      * Enums can be stored in the database in different ways.
@@ -63,6 +67,16 @@ public class Quote {
     private EventType eventType;
 
     /*
+     * One quote can have many quote items.
+     *
+     * Each QuoteItem represents one selected upgrade inside this quote.
+     * mappedBy = "quote" means the QuoteItem entity owns the relationship
+     * through its quote field.
+     */
+    @OneToMany(mappedBy = "quote")
+    private List<QuoteItem> quoteItems = new ArrayList<>();
+
+    /*
      * Required by JPA for reading quote rows from the database.
      */
     protected Quote() {
@@ -82,6 +96,7 @@ public class Quote {
         this.totalPrice = totalPrice;
         this.status = QuoteStatus.NEW;
         this.createdAt = LocalDateTime.now();
+        this.approvedAt = null;
     }
 
     public Long getId() {
@@ -100,6 +115,10 @@ public class Quote {
         return createdAt;
     }
 
+    public LocalDateTime getApprovedAt() {
+        return approvedAt;
+    }
+
     public QuoteStatus getStatus() {
         return status;
     }
@@ -112,6 +131,10 @@ public class Quote {
         return eventType;
     }
 
+    public List<QuoteItem> getQuoteItems() {
+        return quoteItems;
+    }
+
     /*
      * Domain method for changing the quote status.
      *
@@ -120,5 +143,11 @@ public class Quote {
      */
     public void updateStatus(QuoteStatus status) {
         this.status = status;
+
+        if (status == QuoteStatus.APPROVED) {
+            this.approvedAt = LocalDateTime.now();
+        } else {
+            this.approvedAt = null;
+        }
     }
 }

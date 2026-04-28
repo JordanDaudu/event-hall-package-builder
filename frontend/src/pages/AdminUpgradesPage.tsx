@@ -161,50 +161,81 @@ function AdminUpgradesPage() {
 
     return (
         <main className="page">
-            <h1>Admin Upgrades</h1>
+            <div className="page-header">
+                <div>
+                    <h1>Admin Upgrades</h1>
+                    <p>Manage available package upgrades and customer-facing availability.</p>
+                </div>
+
+                <span className="badge">{visibleUpgrades.length} visible</span>
+            </div>
+
+            <section className="stat-row">
+                <div className="stat-card">
+                    <span>Total Upgrades</span>
+                    <strong>{upgrades.length}</strong>
+                </div>
+
+                <div className="stat-card">
+                    <span>Active</span>
+                    <strong>{upgrades.filter((upgrade) => upgrade.active).length}</strong>
+                </div>
+
+                <div className="stat-card">
+                    <span>Inactive</span>
+                    <strong>{upgrades.filter((upgrade) => !upgrade.active).length}</strong>
+                </div>
+
+                <div className="stat-card">
+                    <span>Categories</span>
+                    <strong>{categories.length}</strong>
+                </div>
+            </section>
 
             <section className="card">
                 <h2>Create New Upgrade</h2>
 
-                <input
-                    className="input"
-                    type="text"
-                    placeholder="Name"
-                    value={newUpgrade.name}
-                    onChange={(event) =>
-                        setNewUpgrade({ ...newUpgrade, name: event.target.value })
-                    }
-                />
+                <div className="form-grid">
+                    <input
+                        className="input"
+                        type="text"
+                        placeholder="Name"
+                        value={newUpgrade.name}
+                        onChange={(event) =>
+                            setNewUpgrade({ ...newUpgrade, name: event.target.value })
+                        }
+                    />
 
-                <input
-                    className="input"
-                    type="text"
-                    placeholder="Description"
-                    value={newUpgrade.description}
-                    onChange={(event) =>
-                        setNewUpgrade({ ...newUpgrade, description: event.target.value })
-                    }
-                />
+                    <input
+                        className="input"
+                        type="text"
+                        placeholder="Description"
+                        value={newUpgrade.description}
+                        onChange={(event) =>
+                            setNewUpgrade({ ...newUpgrade, description: event.target.value })
+                        }
+                    />
 
-                <input
-                    className="input"
-                    type="text"
-                    placeholder="Category"
-                    value={newUpgrade.category}
-                    onChange={(event) =>
-                        setNewUpgrade({ ...newUpgrade, category: event.target.value })
-                    }
-                />
+                    <input
+                        className="input"
+                        type="text"
+                        placeholder="Category"
+                        value={newUpgrade.category}
+                        onChange={(event) =>
+                            setNewUpgrade({ ...newUpgrade, category: event.target.value })
+                        }
+                    />
 
-                <input
-                    className="input"
-                    type="number"
-                    placeholder="Price"
-                    value={newUpgrade.price}
-                    onChange={(event) =>
-                        setNewUpgrade({ ...newUpgrade, price: event.target.value })
-                    }
-                />
+                    <input
+                        className="input"
+                        type="number"
+                        placeholder="Price"
+                        value={newUpgrade.price}
+                        onChange={(event) =>
+                            setNewUpgrade({ ...newUpgrade, price: event.target.value })
+                        }
+                    />
+                </div>
 
                 <button className="button" onClick={handleCreateUpgrade}>
                     Create Upgrade
@@ -214,36 +245,38 @@ function AdminUpgradesPage() {
             <section className="card">
                 <h2>Filters</h2>
 
-                <label>
-                    Category{" "}
-                    <select
-                        className="select"
-                        value={categoryFilter}
-                        onChange={(event) => setCategoryFilter(event.target.value)}
-                    >
-                        <option value="ALL">ALL</option>
-                        {categories.map((category) => (
-                            <option key={category} value={category}>
-                                {category}
-                            </option>
-                        ))}
-                    </select>
-                </label>
+                <div className="toolbar">
+                    <label>
+                        Category
+                        <select
+                            className="select"
+                            value={categoryFilter}
+                            onChange={(event) => setCategoryFilter(event.target.value)}
+                        >
+                            <option value="ALL">ALL</option>
+                            {categories.map((category) => (
+                                <option key={category} value={category}>
+                                    {category}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
 
-                <label>
-                    Status{" "}
-                    <select
-                        className="select"
-                        value={statusFilter}
-                        onChange={(event) =>
-                            setStatusFilter(event.target.value as StatusFilter)
-                        }
-                    >
-                        <option value="ALL">ALL</option>
-                        <option value="ACTIVE">ACTIVE</option>
-                        <option value="INACTIVE">INACTIVE</option>
-                    </select>
-                </label>
+                    <label>
+                        Status
+                        <select
+                            className="select"
+                            value={statusFilter}
+                            onChange={(event) =>
+                                setStatusFilter(event.target.value as StatusFilter)
+                            }
+                        >
+                            <option value="ALL">ALL</option>
+                            <option value="ACTIVE">ACTIVE</option>
+                            <option value="INACTIVE">INACTIVE</option>
+                        </select>
+                    </label>
+                </div>
             </section>
 
             {visibleUpgrades.length === 0 ? (
@@ -251,80 +284,85 @@ function AdminUpgradesPage() {
                     <p>No upgrades match the selected filters.</p>
                 </section>
             ) : (
-                visibleUpgrades.map((upgrade) => {
-                    const form = editForms[upgrade.id];
+                <section className="upgrade-grid">
+                    {visibleUpgrades.map((upgrade) => {
+                        const form = editForms[upgrade.id];
 
-                    return (
-                        <section key={upgrade.id} className="card">
-                            <p>
-                                <strong>ID:</strong> {upgrade.id}
-                            </p>
+                        return (
+                            <section key={upgrade.id} className="card upgrade-card">
+                                <div className="card-header">
+                                    <strong>#{upgrade.id}</strong>
 
-                            <input
-                                className="input"
-                                type="text"
-                                value={form?.name ?? ""}
-                                onChange={(event) =>
-                                    updateEditForm(upgrade.id, "name", event.target.value)
-                                }
-                            />
-
-                            <input
-                                className="input"
-                                type="text"
-                                value={form?.description ?? ""}
-                                onChange={(event) =>
-                                    updateEditForm(upgrade.id, "description", event.target.value)
-                                }
-                            />
-
-                            <input
-                                className="input"
-                                type="text"
-                                value={form?.category ?? ""}
-                                onChange={(event) =>
-                                    updateEditForm(upgrade.id, "category", event.target.value)
-                                }
-                            />
-
-                            <input
-                                className="input"
-                                type="number"
-                                value={form?.price ?? ""}
-                                onChange={(event) =>
-                                    updateEditForm(upgrade.id, "price", event.target.value)
-                                }
-                            />
-
-                            <p>
-                                <strong>Status:</strong>{" "}
-                                    <span className={
-                                        upgrade.active
-                                            ? "badge badge-active"
-                                            : "badge badge-inactive"
-                                    }
-                                >
+                                    <span
+                                        className={
+                                            upgrade.active
+                                                ? "badge badge-active"
+                                                : "badge badge-inactive"
+                                        }
+                                    >
                                     {upgrade.active ? "Active" : "Inactive"}
-                            </span>
-                            </p>
+                                </span>
+                                </div>
 
-                            <button className="button" onClick={() => handleSaveUpgrade(upgrade)}>
-                                Save
-                            </button>
+                                <input
+                                    className="input"
+                                    type="text"
+                                    value={form?.name ?? ""}
+                                    onChange={(event) =>
+                                        updateEditForm(upgrade.id, "name", event.target.value)
+                                    }
+                                />
 
-                            <button
-                                className={
-                                    upgrade.active
-                                        ? "button button-danger"
-                                        : "button button-secondary"
-                                }
-                                onClick={() => toggleActive(upgrade)}
-                            >
-                                {upgrade.active ? "Disable" : "Enable"}
-                            </button>
-                        </section>
-                    );
-                })
+                                <input
+                                    className="input"
+                                    type="text"
+                                    value={form?.description ?? ""}
+                                    onChange={(event) =>
+                                        updateEditForm(upgrade.id, "description", event.target.value)
+                                    }
+                                />
+
+                                <input
+                                    className="input"
+                                    type="text"
+                                    value={form?.category ?? ""}
+                                    onChange={(event) =>
+                                        updateEditForm(upgrade.id, "category", event.target.value)
+                                    }
+                                />
+
+                                <input
+                                    className="input"
+                                    type="number"
+                                    value={form?.price ?? ""}
+                                    onChange={(event) =>
+                                        updateEditForm(upgrade.id, "price", event.target.value)
+                                    }
+                                />
+
+                                <div>
+                                    <button
+                                        className="button"
+                                        onClick={() => handleSaveUpgrade(upgrade)}
+                                    >
+                                        Save
+                                    </button>
+
+                                    <button
+                                        className={
+                                            upgrade.active
+                                                ? "button button-danger"
+                                                : "button button-secondary"
+                                        }
+                                        onClick={() => toggleActive(upgrade)}
+                                    >
+                                        {upgrade.active ? "Disable" : "Enable"}
+                                    </button>
+                                </div>
+                            </section>
+                        );
+                    })}
+                </section>
             )}
         </main>
     );

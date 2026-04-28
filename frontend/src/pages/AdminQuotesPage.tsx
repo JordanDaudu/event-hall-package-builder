@@ -31,93 +31,155 @@ function AdminQuotesPage() {
     ) {
         const updated = await updateQuoteStatus(id, newStatus);
 
-        setQuotes((prev) => prev.map((q) => (q.id === id ? updated : q)));
+        setQuotes((prev) => prev.map((quote) => (quote.id === id ? updated : quote)));
     }
+
+    const totalRevenue = quotes.reduce((sum, quote) => sum + quote.totalPrice, 0);
+
+    const newQuotesCount = quotes.filter((quote) => quote.status === "NEW").length;
+    const approvedQuotesCount = quotes.filter(
+        (quote) => quote.status === "APPROVED"
+    ).length;
 
     return (
         <main className="page">
-            <h1>Admin Quotes</h1>
+            <div className="page-header">
+                <div>
+                    <h1>Admin Quotes</h1>
+                    <p>View customer quote requests and manage their statuses.</p>
+                </div>
 
-            <section className="card">
-                <label>
-                    Filter by status{" "}
-                    <select
-                        className="select"
-                        value={statusFilter}
-                        onChange={(event) =>
-                            setStatusFilter(event.target.value as StatusFilter)
-                        }
-                    >
-                        <option value="ALL">ALL</option>
-                        <option value="NEW">NEW</option>
-                        <option value="CONTACTED">CONTACTED</option>
-                        <option value="APPROVED">APPROVED</option>
-                        <option value="REJECTED">REJECTED</option>
-                    </select>
-                </label>
+                <span className="badge">{quotes.length} quotes</span>
+            </div>
+
+            <section className="stat-row">
+                <div className="stat-card">
+                    <span>Total Quotes</span>
+                    <strong>{quotes.length}</strong>
+                </div>
+
+                <div className="stat-card">
+                    <span>New Quotes</span>
+                    <strong>{newQuotesCount}</strong>
+                </div>
+
+                <div className="stat-card">
+                    <span>Approved Quotes</span>
+                    <strong>{approvedQuotesCount}</strong>
+                </div>
+
+                <div className="stat-card">
+                    <span>Visible Total Value</span>
+                    <strong>{totalRevenue.toLocaleString()}</strong>
+                </div>
             </section>
 
-            {loading ? (
-                <p>Loading quotes...</p>
-            ) : quotes.length === 0 ? (
-                <section className="card">
-                    <p>No quotes found.</p>
-                </section>
-            ) : (
-                quotes.map((quote) => (
-                    <section key={quote.id} className="card">
-                        <p>
-                            <strong>ID:</strong> {quote.id}
-                        </p>
-
-                        <h2>Customer</h2>
-
-                        <p>
-                            <strong>Name:</strong> {quote.customerName}
-                        </p>
-                        <p>
-                            <strong>Email:</strong> {quote.customerEmail}
-                        </p>
-                        <p>
-                            <strong>Phone:</strong> {quote.customerPhoneNumber || "N/A"}
-                        </p>
-
-                        <h2>Event</h2>
-
-                        <p>
-                            <strong>Event:</strong> {quote.eventTypeName}
-                        </p>
-                        <p>
-                            <strong>Guests:</strong> {quote.guestCount}
-                        </p>
-                        <p>
-                            <strong>Total:</strong> {quote.totalPrice}
-                        </p>
-
-                        <p>
-                            <strong>Status:</strong>{" "}
-                            <span className={`badge badge-${quote.status.toLowerCase()}`}>
-                            {quote.status}
-                        </span>
-                        </p>
-
+            <section className="card">
+                <div className="toolbar">
+                    <label>
+                        Filter by status
                         <select
                             className="select"
-                            value={quote.status}
+                            value={statusFilter}
                             onChange={(event) =>
-                                handleStatusChange(
-                                    quote.id,
-                                    event.target.value as QuoteResponse["status"]
-                                )
+                                setStatusFilter(event.target.value as StatusFilter)
                             }
                         >
+                            <option value="ALL">ALL</option>
                             <option value="NEW">NEW</option>
                             <option value="CONTACTED">CONTACTED</option>
                             <option value="APPROVED">APPROVED</option>
                             <option value="REJECTED">REJECTED</option>
                         </select>
-                    </section>
-                ))
+                    </label>
+                </div>
+            </section>
+
+            {loading ? (
+                <section className="card">
+                    <p>Loading quotes...</p>
+                </section>
+            ) : quotes.length === 0 ? (
+                <section className="card">
+                    <p>No quotes found.</p>
+                </section>
+            ) : (
+                <section className="card table-card">
+                    <table className="data-table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Customer</th>
+                            <th>Contact</th>
+                            <th>Event</th>
+                            <th>Upgrades</th>
+                            <th>Guests</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Update</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        {quotes.map((quote) => (
+                            <tr key={quote.id}>
+                                <td>#{quote.id}</td>
+
+                                <td>
+                                    <strong>{quote.customerName}</strong>
+                                </td>
+
+                                <td>
+                                    <div>{quote.customerEmail}</div>
+                                    <div>{quote.customerPhoneNumber || "N/A"}</div>
+                                </td>
+
+                                <td>{quote.eventTypeName}</td>
+
+                                <td>
+                                    {quote.upgrades.length === 0 ? (
+                                        <span className="muted">None</span>
+                                    ) : (
+                                        quote.upgrades.map((upgrade) => (
+                                            <span key={upgrade} className="badge" style={{ marginRight: "6px" }}>
+                                                {upgrade}
+                                            </span>
+                                        ))
+                                    )}
+                                </td>
+
+                                <td>{quote.guestCount}</td>
+
+                                <td>{quote.totalPrice.toLocaleString()}</td>
+
+                                <td>
+                    <span className={`badge badge-${quote.status.toLowerCase()}`}>
+                      {quote.status}
+                    </span>
+                                </td>
+
+                                <td>
+                                    <select
+                                        className="select table-select"
+                                        value={quote.status}
+                                        onChange={(event) =>
+                                            handleStatusChange(
+                                                quote.id,
+                                                event.target.value as QuoteResponse["status"]
+                                            )
+                                        }
+                                    >
+                                        <option value="NEW">NEW</option>
+                                        <option value="CONTACTED">CONTACTED</option>
+                                        <option value="APPROVED">APPROVED</option>
+                                        <option value="REJECTED">REJECTED</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                </section>
             )}
         </main>
     );
