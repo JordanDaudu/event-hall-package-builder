@@ -332,4 +332,13 @@ section.card {
     transform: translate(-50%, -50%);
     pointer-events: none;
     z-index: 2;
+    opacity: 0;
+    animation: fadeIn 0.3s ease forwards;
+    transition: opacity 0.2s ease;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
 }

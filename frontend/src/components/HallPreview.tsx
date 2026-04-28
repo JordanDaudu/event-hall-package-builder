@@ -23,14 +23,24 @@ const HALL_IMAGES: Record<string, string> = {
     Birthday: hall2,
 };
 
-const UPGRADE_VISUALS: Record<string, UpgradeVisual> = {
-    Flowers: {
+/*
+ * Uses upgrade IDs instead of upgrade names.
+ *
+ * This is safer because an admin might rename "Flowers" to
+ * "Premium Flowers", but the upgrade ID will stay the same.
+ *
+ * Current seeded upgrade IDs:
+ * 1 = Flowers
+ * 2 = DJ
+ */
+const UPGRADE_VISUALS: Record<number, UpgradeVisual> = {
+    1: {
         imageUrl: flowers,
         top: "58%",
         left: "18%",
         width: "22%",
     },
-    DJ: {
+    2: {
         imageUrl: djBooth,
         top: "55%",
         left: "60%",
@@ -56,7 +66,7 @@ function HallPreview({ selectedEventType, selectedUpgrades }: HallPreviewProps) 
                 />
 
                 {selectedUpgrades.map((upgrade) => {
-                    const visual = UPGRADE_VISUALS[upgrade.name];
+                    const visual = UPGRADE_VISUALS[upgrade.id];
 
                     if (!visual) return null;
 
@@ -75,6 +85,12 @@ function HallPreview({ selectedEventType, selectedUpgrades }: HallPreviewProps) 
                     );
                 })}
             </div>
+
+            {selectedUpgrades.length === 0 && (
+                <p className="muted" style={{ marginTop: 12 }}>
+                    Select upgrades to see them appear in the hall preview.
+                </p>
+            )}
 
             <p className="muted">
                 Preview updates live based on selected upgrades.
