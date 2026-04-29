@@ -213,51 +213,115 @@ export default function AdminRequestDetailPage() {
                 </div>
             </div>
 
-            <div className="card table-card" style={{ marginTop: "24px" }}>
-                <h3 className="card-section-title" style={{ marginBottom: "16px" }}>אפשרויות שנבחרו</h3>
-                {request.items.length === 0 ? (
-                    <p className="muted">לא נבחרו אפשרויות.</p>
-                ) : (
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                <th>שם האפשרות</th>
-                                <th>מחיר גלובלי</th>
-                                <th>מחיר סופי</th>
-                                <th>הערה</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {request.items.map((item) => (
-                                <tr key={item.id}>
-                                    <td>{item.optionNameSnapshot}</td>
-                                    <td>{formatILS(item.globalPriceSnapshot)}</td>
-                                    <td style={{ fontWeight: 600 }}>{formatILS(item.finalPrice)}</td>
-                                    <td>
-                                        {item.hasCustomerOverride && (
-                                            <span className="badge badge-active" style={{ fontSize: "0.75rem" }}>
-                                                מחיר מותאם ללקוח
+            {(() => {
+                const chuppahItem = request.items.find((i) => i.category === "CHUPPAH");
+                const chuppahUpgrades = request.items.filter((i) => i.category === "CHUPPAH_UPGRADE");
+                const otherItems = request.items.filter(
+                    (i) => i.category !== "CHUPPAH" && i.category !== "CHUPPAH_UPGRADE"
+                );
+
+                return (
+                    <>
+                        {(chuppahItem || chuppahUpgrades.length > 0) && (
+                            <div className="card" style={{ marginTop: "24px" }}>
+                                <h3 className="card-section-title" style={{ marginBottom: "16px" }}>חופה + תוספות</h3>
+                                <div className="detail-list">
+                                    {chuppahItem && (
+                                        <div className="detail-row">
+                                            <span className="detail-label">חופה</span>
+                                            <span className="detail-value" style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                                                {chuppahItem.optionNameSnapshot}
+                                                <span style={{ color: "var(--color-muted)", fontWeight: 400 }}>
+                                                    {formatILS(chuppahItem.finalPrice)}
+                                                </span>
+                                                {chuppahItem.hasCustomerOverride && (
+                                                    <span className="badge badge-active" style={{ fontSize: "0.72rem" }}>מחיר מותאם</span>
+                                                )}
                                             </span>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                        <tfoot>
-                            <tr className="table-total-row">
-                                <td colSpan={2}>חבילה בסיסית</td>
-                                <td style={{ fontWeight: 600 }}>{formatILS(request.basePackagePriceSnapshot)}</td>
-                                <td />
-                            </tr>
-                            <tr className="table-total-row table-grand-total-row">
-                                <td colSpan={2}>סה"כ</td>
-                                <td style={{ fontWeight: 700 }}>{formatILS(request.totalPrice)}</td>
-                                <td />
-                            </tr>
-                        </tfoot>
-                    </table>
-                )}
-            </div>
+                                        </div>
+                                    )}
+                                    {chuppahUpgrades.length > 0 && (
+                                        <div className="detail-row" style={{ alignItems: "flex-start" }}>
+                                            <span className="detail-label">תוספות</span>
+                                            <span className="detail-value">
+                                                <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "6px" }}>
+                                                    {chuppahUpgrades.map((u) => (
+                                                        <li key={u.id} style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                                                            <span>{u.optionNameSnapshot}</span>
+                                                            <span style={{ color: "var(--color-muted)", fontWeight: 400 }}>
+                                                                {formatILS(u.finalPrice)}
+                                                            </span>
+                                                            {u.hasCustomerOverride && (
+                                                                <span className="badge badge-active" style={{ fontSize: "0.72rem" }}>מחיר מותאם</span>
+                                                            )}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </span>
+                                        </div>
+                                    )}
+                                    {chuppahUpgrades.length === 0 && chuppahItem && (
+                                        <div className="detail-row">
+                                            <span className="detail-label">תוספות</span>
+                                            <span className="detail-value muted">ללא תוספות</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="card table-card" style={{ marginTop: "24px" }}>
+                            <h3 className="card-section-title" style={{ marginBottom: "16px" }}>אפשרויות שנבחרו</h3>
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>שם האפשרות</th>
+                                        <th>מחיר גלובלי</th>
+                                        <th>מחיר סופי</th>
+                                        <th>הערה</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {otherItems.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={4} className="muted" style={{ textAlign: "center" }}>
+                                                לא נבחרו אפשרויות נוספות.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        otherItems.map((item) => (
+                                            <tr key={item.id}>
+                                                <td>{item.optionNameSnapshot}</td>
+                                                <td>{formatILS(item.globalPriceSnapshot)}</td>
+                                                <td style={{ fontWeight: 600 }}>{formatILS(item.finalPrice)}</td>
+                                                <td>
+                                                    {item.hasCustomerOverride && (
+                                                        <span className="badge badge-active" style={{ fontSize: "0.75rem" }}>
+                                                            מחיר מותאם ללקוח
+                                                        </span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                                <tfoot>
+                                    <tr className="table-total-row">
+                                        <td colSpan={2}>חבילה בסיסית</td>
+                                        <td style={{ fontWeight: 600 }}>{formatILS(request.basePackagePriceSnapshot)}</td>
+                                        <td />
+                                    </tr>
+                                    <tr className="table-total-row table-grand-total-row">
+                                        <td colSpan={2}>סה"כ</td>
+                                        <td style={{ fontWeight: 700 }}>{formatILS(request.totalPrice)}</td>
+                                        <td />
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </>
+                );
+            })()}
 
             <Modal
                 open={modalAction !== null}

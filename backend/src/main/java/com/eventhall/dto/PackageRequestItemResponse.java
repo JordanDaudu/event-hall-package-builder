@@ -14,7 +14,8 @@ public record PackageRequestItemResponse(
         BigDecimal globalPriceSnapshot,
         BigDecimal customerOverridePriceSnapshot,
         BigDecimal finalPrice,
-        boolean hasCustomerOverride
+        boolean hasCustomerOverride,
+        PackageOptionCategory category
 ) {
     public static PackageRequestItemResponse from(PackageRequestItem item) {
         return new PackageRequestItemResponse(
@@ -24,7 +25,8 @@ public record PackageRequestItemResponse(
                 item.getGlobalPriceSnapshot(),
                 item.getCustomerOverridePriceSnapshot(),
                 item.getFinalPrice(),
-                item.getCustomerOverridePriceSnapshot() != null
+                item.getCustomerOverridePriceSnapshot() != null,
+                item.getPackageOption().getCategory()
         );
     }
 }

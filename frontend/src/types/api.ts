@@ -176,6 +176,7 @@ export interface PackageRequestItemResponse {
     customerOverridePriceSnapshot?: number | null;
     finalPrice: number;
     hasCustomerOverride: boolean;
+    category: PackageOptionCategory;
 }
 
 export interface PackageRequestSummaryResponse {
