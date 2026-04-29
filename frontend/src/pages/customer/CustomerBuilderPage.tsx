@@ -883,7 +883,6 @@ function Step4NapkinsTablecloths({
     tableclothId,
     setTableclothId,
     effectivePrice,
-    venueImageUrl,
 }: {
     napkinOpts: PackageOptionResponse[];
     tableclothOpts: PackageOptionResponse[];
@@ -892,15 +891,18 @@ function Step4NapkinsTablecloths({
     tableclothId: number | null;
     setTableclothId: (id: number | null) => void;
     effectivePrice: (opt: PackageOptionResponse) => number;
-    venueImageUrl?: string | null;
 }) {
-    const [hoveredId, setHoveredId] = useState<number | null>(null);
-    const allOpts = useMemo(() => [...napkinOpts, ...tableclothOpts], [napkinOpts, tableclothOpts]);
-    const hoveredOpt = hoveredId !== null ? (allOpts.find((o) => o.id === hoveredId) ?? null) : null;
+    // Separate hover states — napkin hover never affects tablecloth preview and vice versa
+    const [hoveredNapkinId, setHoveredNapkinId] = useState<number | null>(null);
+    const [hoveredTableclothId, setHoveredTableclothId] = useState<number | null>(null);
+
+    const hoveredNapkinOpt = hoveredNapkinId !== null ? (napkinOpts.find((o) => o.id === hoveredNapkinId) ?? null) : null;
     const selectedNapkinOpt = napkinOpts.find((o) => o.id === napkinId) ?? null;
+    const napkinPreviewOpt = hoveredNapkinOpt ?? selectedNapkinOpt;
+
+    const hoveredTableclothOpt = hoveredTableclothId !== null ? (tableclothOpts.find((o) => o.id === hoveredTableclothId) ?? null) : null;
     const selectedTableclothOpt = tableclothOpts.find((o) => o.id === tableclothId) ?? null;
-    const fallbackSelected = selectedNapkinOpt ?? selectedTableclothOpt;
-    const previewOpt = hoveredOpt ?? fallbackSelected;
+    const tableclothPreviewOpt = hoveredTableclothOpt ?? selectedTableclothOpt;
 
     return (
         <div className="builder-step">
@@ -910,10 +912,10 @@ function Step4NapkinsTablecloths({
                 <p>בחרו מפית ומפה לשולחנות האירוע.</p>
             </div>
 
-            <OptionPreview selected={previewOpt} isHoverPreview={hoveredId !== null} />
-
+            {/* Napkin section — own preview, own hover */}
+            <OptionPreview selected={napkinPreviewOpt} isHoverPreview={hoveredNapkinId !== null} />
             <div className="card">
-                <h3 style={{ marginBottom: "14px" }}>מפית</h3>
+                <h3 style={{ marginBottom: "14px" }}>בחירת מפיות</h3>
                 <p className="muted" style={{ fontSize: "0.88rem", marginBottom: "14px" }}>
                     בחרו את סגנון המפית.
                 </p>
@@ -922,25 +924,23 @@ function Step4NapkinsTablecloths({
                     selectedId={napkinId}
                     onSelect={(id) => setNapkinId(napkinId === id ? null : id)}
                     effectivePrice={effectivePrice}
-                    onHover={setHoveredId}
+                    onHover={setHoveredNapkinId}
                 />
             </div>
 
-            <div className="card" style={{ opacity: napkinId ? 1 : 0.55, transition: "opacity 0.3s" }}>
-                <h3 style={{ marginBottom: "14px" }}>
-                    מפה
-                    {!napkinId && (
-                        <span className="muted" style={{ fontSize: "0.8rem", fontWeight: 400, marginInlineStart: "8px" }}>
-                            (בחרו מפית תחילה)
-                        </span>
-                    )}
-                </h3>
+            {/* Tablecloth section — own preview, own hover */}
+            <OptionPreview selected={tableclothPreviewOpt} isHoverPreview={hoveredTableclothId !== null} />
+            <div className="card">
+                <h3 style={{ marginBottom: "14px" }}>בחירת מפות</h3>
+                <p className="muted" style={{ fontSize: "0.88rem", marginBottom: "14px" }}>
+                    בחרו את סגנון המפה.
+                </p>
                 <OptionGrid
                     options={tableclothOpts}
                     selectedId={tableclothId}
-                    onSelect={(id) => napkinId && setTableclothId(tableclothId === id ? null : id)}
+                    onSelect={(id) => setTableclothId(tableclothId === id ? null : id)}
                     effectivePrice={effectivePrice}
-                    onHover={setHoveredId}
+                    onHover={setHoveredTableclothId}
                 />
             </div>
         </div>
@@ -998,9 +998,6 @@ function Step6Summary({
     runningTotal,
     effectivePrice,
     basePackagePrice,
-    submitError,
-    submitting,
-    onSubmit,
 }: {
     eventDetails: EventDetails;
     venues: VenueResponse[];
@@ -1009,9 +1006,6 @@ function Step6Summary({
     runningTotal: number;
     effectivePrice: (opt: PackageOptionResponse) => number;
     basePackagePrice: number;
-    submitError: string | null;
-    submitting: boolean;
-    onSubmit: () => void;
 }) {
     const venue = venues.find((v) => v.id === eventDetails.venueId);
     const displayedBasePrice = Number.isFinite(basePackagePrice) && basePackagePrice > 0 ? basePackagePrice : 0;
@@ -1078,10 +1072,6 @@ function Step6Summary({
                     <span>סה"כ משוער</span>
                     <span>{formatILS(runningTotal)}</span>
                 </div>
-                {submitError && <div className="builder-submit-error">{submitError}</div>}
-                <button className="button builder-submit-btn" onClick={onSubmit} disabled={submitting}>
-                    {submitting ? "שולח..." : "שלח לאישור"}
-                </button>
                 <p className="muted" style={{ marginTop: "12px", fontSize: "0.84rem", textAlign: "center" }}>
                     לאחר השליחה נציגנו יצרו עמך קשר לאישור סופי.
                 </p>
@@ -1451,7 +1441,6 @@ export default function CustomerBuilderPage() {
                         tableclothId={tableclothId}
                         setTableclothId={setTableclothId}
                         effectivePrice={effectivePrice}
-                        venueImageUrl={selectedVenueImageUrl}
                     />
                 );
             case 5:
@@ -1474,9 +1463,6 @@ export default function CustomerBuilderPage() {
                         runningTotal={runningTotal}
                         effectivePrice={effectivePrice}
                         basePackagePrice={user?.basePackagePrice ?? 0}
-                        submitError={submitError}
-                        submitting={submitting}
-                        onSubmit={handleSubmit}
                     />
                 );
         }
@@ -1487,19 +1473,39 @@ export default function CustomerBuilderPage() {
             {renderStep()}
 
             {stepError && <div className="builder-step-error">{stepError}</div>}
-
-            {step < 6 && (
-                <div className="step-nav">
-                    {step > 0 && (
-                        <button className="button-secondary" onClick={goBack}>
-                            ← הקודם
-                        </button>
-                    )}
-                    <button className="button" onClick={goNext} style={{ marginInlineStart: "auto" }}>
-                        {step === 5 ? "לסיכום ושליחה" : "הבא →"}
-                    </button>
+            {submitError && step === 6 && (
+                <div className="builder-step-error" style={{ maxWidth: "920px", margin: "8px auto 0" }}>
+                    {submitError}
                 </div>
             )}
+
+            <div className="builder-navigation">
+                {step > 0 ? (
+                    <button
+                        className="builder-nav-button secondary"
+                        onClick={goBack}
+                        disabled={submitting}
+                    >
+                        חזרה
+                    </button>
+                ) : (
+                    <div />
+                )}
+
+                {step < 6 ? (
+                    <button className="builder-nav-button primary" onClick={goNext}>
+                        {step === 5 ? "לסיכום ושליחה" : "המשך"}
+                    </button>
+                ) : (
+                    <button
+                        className="builder-nav-button primary"
+                        onClick={handleSubmit}
+                        disabled={submitting}
+                    >
+                        {submitting ? "שולח..." : "שליחה לאישור מנהל האולם"}
+                    </button>
+                )}
+            </div>
         </main>
     );
 }
