@@ -1798,6 +1798,10 @@ hr {
     opacity: 0.35;
 }
 
+.option-preview-bg--option {
+    opacity: 0.75;
+}
+
 .option-preview-overlay {
     position: absolute;
     inset: 0;

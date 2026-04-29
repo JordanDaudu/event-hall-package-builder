@@ -62,10 +62,18 @@ function OptionPreview({
     selected: PackageOptionResponse | null;
     venueImageUrl?: string | null;
 }) {
+    const optionImageUrl = selected?.imageUrl ?? null;
+    const bgUrl = optionImageUrl ?? venueImageUrl ?? null;
+    const isOptionImage = !!optionImageUrl;
+
     return (
         <div className="option-preview">
-            {venueImageUrl && (
-                <img src={venueImageUrl} alt="רקע" className="option-preview-bg" />
+            {bgUrl && (
+                <img
+                    src={bgUrl}
+                    alt="רקע"
+                    className={`option-preview-bg${isOptionImage ? " option-preview-bg--option" : ""}`}
+                />
             )}
             <div className="option-preview-overlay" />
             <div className="option-preview-content">
