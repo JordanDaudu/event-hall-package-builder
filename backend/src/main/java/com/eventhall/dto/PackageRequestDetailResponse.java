@@ -10,6 +10,11 @@ import java.util.List;
 
 /**
  * Full detail of a PackageRequest including all snapshotted fields and line items.
+ *
+ * approvedAt and rejectedAt are derived from the entity's single decidedAt
+ * timestamp plus the status — the entity stores one field for simplicity,
+ * but the API exposes them separately so that downstream consumers (frontend,
+ * admin UI) receive the semantically named fields they expect.
  */
 public record PackageRequestDetailResponse(
         Long id,
@@ -27,11 +32,13 @@ public record PackageRequestDetailResponse(
         String summaryNotes,
         Integer knightTableCount,
         Instant submittedAt,
-        Instant decidedAt,
+        Instant approvedAt,
+        Instant rejectedAt,
         Instant createdAt,
         List<PackageRequestItemResponse> items
 ) {
     public static PackageRequestDetailResponse from(PackageRequest r, List<PackageRequestItemResponse> items) {
+        Instant decided = r.getDecidedAt();
         return new PackageRequestDetailResponse(
                 r.getId(),
                 r.getCustomer().getId(),
@@ -48,7 +55,8 @@ public record PackageRequestDetailResponse(
                 r.getSummaryNotes(),
                 r.getKnightTableCount(),
                 r.getSubmittedAt(),
-                r.getDecidedAt(),
+                r.getStatus() == RequestStatus.APPROVED ? decided : null,
+                r.getStatus() == RequestStatus.REJECTED ? decided : null,
                 r.getCreatedAt(),
                 items
         );
