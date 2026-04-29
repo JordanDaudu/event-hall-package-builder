@@ -1516,6 +1516,22 @@ hr {
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    overflow: hidden;
+}
+
+.option-card.has-thumb {
+    padding-top: 0;
+}
+
+.option-card-thumb {
+    display: block;
+    width: calc(100% + 36px);
+    margin: 0 -18px 14px;
+    height: 130px;
+    object-fit: cover;
+    object-position: center;
+    border-radius: calc(var(--radius-md) - 2px) calc(var(--radius-md) - 2px) 0 0;
+    flex-shrink: 0;
 }
 
 .option-card:hover {

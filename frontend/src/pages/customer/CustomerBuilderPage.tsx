@@ -111,10 +111,13 @@ function OptionGrid({
                     <button
                         key={opt.id}
                         type="button"
-                        className={`option-card${selectedId === opt.id ? " selected" : ""}${isDisabled ? " disabled" : ""}`}
+                        className={`option-card${selectedId === opt.id ? " selected" : ""}${isDisabled ? " disabled" : ""}${opt.imageUrl ? " has-thumb" : ""}`}
                         onClick={() => !isDisabled && onSelect(opt.id)}
                         disabled={isDisabled}
                     >
+                        {opt.imageUrl && (
+                            <img src={opt.imageUrl} alt={opt.nameHe} className="option-card-thumb" />
+                        )}
                         <div className="option-card-inner">
                             <div className="option-card-name">{opt.nameHe}</div>
                             {opt.nameEn && <div className="option-card-name-en">{opt.nameEn}</div>}
@@ -346,9 +349,12 @@ function Step1Chuppah({
                                 <button
                                     key={u.id}
                                     type="button"
-                                    className={`option-card${isSelected ? " selected" : ""}`}
+                                    className={`option-card${isSelected ? " selected" : ""}${u.imageUrl ? " has-thumb" : ""}`}
                                     onClick={() => onToggleUpgrade(u.id)}
                                 >
+                                    {u.imageUrl && (
+                                        <img src={u.imageUrl} alt={u.nameHe} className="option-card-thumb" />
+                                    )}
                                     <div className="option-card-inner">
                                         <div className="option-card-name">{u.nameHe}</div>
                                         {u.nameEn && <div className="option-card-name-en">{u.nameEn}</div>}
