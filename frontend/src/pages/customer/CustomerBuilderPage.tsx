@@ -86,7 +86,7 @@ function OptionPreview({
                         )}
                     </>
                 ) : (
-                    <div className="option-preview-placeholder">לחצו על אפשרות לצפייה בתצוגה מקדימה</div>
+                    <div className="option-preview-placeholder">העבירו את העכבר על אפשרות לצפייה בתצוגה מקדימה</div>
                 )}
             </div>
         </div>
@@ -101,12 +101,14 @@ function OptionGrid({
     onSelect,
     effectivePrice,
     disabledIds,
+    onHover,
 }: {
     options: PackageOptionResponse[];
     selectedId: number | null;
     onSelect: (id: number) => void;
     effectivePrice: (opt: PackageOptionResponse) => number;
     disabledIds?: number[];
+    onHover?: (id: number | null) => void;
 }) {
     if (options.length === 0) {
         return <p className="muted" style={{ padding: "24px 0" }}>אין אפשרויות זמינות.</p>;
@@ -122,6 +124,8 @@ function OptionGrid({
                         className={`option-card${selectedId === opt.id ? " selected" : ""}${isDisabled ? " disabled" : ""}${opt.imageUrl ? " has-thumb" : ""}`}
                         onClick={() => !isDisabled && onSelect(opt.id)}
                         disabled={isDisabled}
+                        onMouseEnter={() => onHover?.(opt.id)}
+                        onMouseLeave={() => onHover?.(null)}
                     >
                         {opt.imageUrl && (
                             <img src={opt.imageUrl} alt={opt.nameHe} className="option-card-thumb" />
@@ -395,7 +399,10 @@ function Step2Aisle({
     venueImageUrl?: string | null;
 }) {
     const [activeTab, setActiveTab] = useState<string>("ALL");
+    const [hoveredId, setHoveredId] = useState<number | null>(null);
     const selectedOpt = options.find((o) => o.id === selectedId) ?? null;
+    const hoveredOpt = hoveredId !== null ? (options.find((o) => o.id === hoveredId) ?? null) : null;
+    const previewOpt = hoveredOpt ?? selectedOpt;
 
     // Derive filter tabs from nameEn prefix tokens (optional grouping within the AISLE category)
     const tabs = useMemo(() => {
@@ -414,7 +421,7 @@ function Step2Aisle({
                 <h2>שדרה</h2>
                 <p>בחרו את סגנון השדרה לכניסה לאולם.</p>
             </div>
-            <OptionPreview selected={selectedOpt} venueImageUrl={venueImageUrl} />
+            <OptionPreview selected={previewOpt} venueImageUrl={venueImageUrl} />
             <div className="card">
                 {tabs.length > 1 && (
                     <div className="tab-bar" style={{ marginBottom: "18px" }}>
@@ -434,6 +441,7 @@ function Step2Aisle({
                     selectedId={selectedId}
                     onSelect={onSelect}
                     effectivePrice={effectivePrice}
+                    onHover={setHoveredId}
                 />
             </div>
         </div>
