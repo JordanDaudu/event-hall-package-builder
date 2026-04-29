@@ -236,22 +236,28 @@ function ChuppahPreview({
     selectedChuppah,
     selectedUpgrades,
     venueImageUrl,
+    hoveredChuppah,
+    hoveredUpgrade,
 }: {
     selectedChuppah: PackageOptionResponse | null;
     selectedUpgrades: PackageOptionResponse[];
     venueImageUrl?: string | null;
+    hoveredChuppah?: PackageOptionResponse | null;
+    hoveredUpgrade?: PackageOptionResponse | null;
 }) {
+    const displayChuppah = hoveredChuppah ?? selectedChuppah;
     const chuppahImageUrl =
-        selectedChuppah?.visualBehavior === "REPLACE_IMAGE" ? (selectedChuppah.imageUrl ?? null) : null;
-    const overlayUpgrades = selectedUpgrades.filter(
-        (u) => u.visualBehavior === "OVERLAY_IMAGE" && u.imageUrl,
-    );
+        displayChuppah?.visualBehavior === "REPLACE_IMAGE" ? (displayChuppah.imageUrl ?? null) : null;
+
+    const overlayUpgrades = hoveredUpgrade
+        ? [hoveredUpgrade].filter((u) => u.visualBehavior === "OVERLAY_IMAGE" && u.imageUrl)
+        : selectedUpgrades.filter((u) => u.visualBehavior === "OVERLAY_IMAGE" && u.imageUrl);
 
     return (
         <div className="chuppah-preview">
             {/* Background: chuppah image (REPLACE_IMAGE) or venue image as dim backdrop */}
             {chuppahImageUrl ? (
-                <img src={chuppahImageUrl} alt={selectedChuppah?.nameHe ?? "חופה"} className="chuppah-preview-main" />
+                <img src={chuppahImageUrl} alt={displayChuppah?.nameHe ?? "חופה"} className="chuppah-preview-main" />
             ) : venueImageUrl ? (
                 <img src={venueImageUrl} alt="רקע" className="option-preview-bg" />
             ) : null}
@@ -277,12 +283,12 @@ function ChuppahPreview({
 
             {/* Label */}
             <div className="option-preview-content">
-                {selectedChuppah ? (
+                {displayChuppah ? (
                     <>
                         <div className="option-preview-check">✓</div>
-                        <div className="option-preview-name">{selectedChuppah.nameHe}</div>
-                        {selectedChuppah.nameEn && (
-                            <div className="option-preview-name-en">{selectedChuppah.nameEn}</div>
+                        <div className="option-preview-name">{displayChuppah.nameHe}</div>
+                        {displayChuppah.nameEn && (
+                            <div className="option-preview-name-en">{displayChuppah.nameEn}</div>
                         )}
                     </>
                 ) : (
@@ -316,7 +322,13 @@ function Step1Chuppah({
     effectivePrice: (opt: PackageOptionResponse) => number;
     venueImageUrl?: string | null;
 }) {
+    const [hoveredChuppahId, setHoveredChuppahId] = useState<number | null>(null);
+    const [hoveredUpgradeId, setHoveredUpgradeId] = useState<number | null>(null);
+
     const selectedOpt = chuppahOpts.find((o) => o.id === selectedId) ?? null;
+    const hoveredChuppahOpt = hoveredChuppahId !== null ? (chuppahOpts.find((o) => o.id === hoveredChuppahId) ?? null) : null;
+    const hoveredUpgradeOpt = hoveredUpgradeId !== null ? (upgradeOpts.find((o) => o.id === hoveredUpgradeId) ?? null) : null;
+
     const compatibleUpgradeIds: number[] = selectedId != null ? (compatibilityMap[selectedId] ?? []) : [];
     const visibleUpgrades = upgradeOpts.filter((u) => compatibleUpgradeIds.includes(u.id));
     const activeUpgrades = upgradeOpts.filter(
@@ -334,6 +346,8 @@ function Step1Chuppah({
                 selectedChuppah={selectedOpt}
                 selectedUpgrades={activeUpgrades}
                 venueImageUrl={venueImageUrl}
+                hoveredChuppah={hoveredChuppahOpt}
+                hoveredUpgrade={hoveredUpgradeOpt}
             />
             <div className="card">
                 <OptionGrid
@@ -341,6 +355,7 @@ function Step1Chuppah({
                     selectedId={selectedId}
                     onSelect={onSelectChuppah}
                     effectivePrice={effectivePrice}
+                    onHover={setHoveredChuppahId}
                 />
             </div>
 
@@ -363,6 +378,8 @@ function Step1Chuppah({
                                     type="button"
                                     className={`option-card${isSelected ? " selected" : ""}${u.imageUrl ? " has-thumb" : ""}`}
                                     onClick={() => onToggleUpgrade(u.id)}
+                                    onMouseEnter={() => setHoveredUpgradeId(u.id)}
+                                    onMouseLeave={() => setHoveredUpgradeId(null)}
                                 >
                                     {u.imageUrl && (
                                         <img src={u.imageUrl} alt={u.nameHe} className="option-card-thumb" />
