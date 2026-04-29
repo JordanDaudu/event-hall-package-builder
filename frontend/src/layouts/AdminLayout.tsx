@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import adamaLogo from "../assets/logos/adama-logo.jpeg";
+import jdLogo from "../assets/logos/jd-logo.png";
 
 const NAV_LINKS = [
     { to: "/admin/customers", label: "לקוחות" },
@@ -53,7 +54,10 @@ export default function AdminLayout() {
                     <span className="footer-copy">
                         © {new Date().getFullYear()} אדמה — אולמות אירועים
                     </span>
-                    <span className="badge">מנהל מערכת</span>
+                    <div className="footer-credit">
+                        <span>Designed &amp; Built by</span>
+                        <img src={jdLogo} alt="JD" />
+                    </div>
                 </div>
             </footer>
         </div>

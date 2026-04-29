@@ -2,6 +2,7 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { BuilderUiProvider, useBuilderUi } from "../contexts/BuilderUiContext";
 import adamaLogo from "../assets/logos/adama-logo.jpeg";
+import jdLogo from "../assets/logos/jd-logo.png";
 
 const STEPS = [
     "פרטי אירוע",
@@ -85,6 +86,10 @@ function CustomerLayoutInner() {
                     <span className="footer-copy">
                         © {new Date().getFullYear()} אדמה — אולמות אירועים
                     </span>
+                    <div className="footer-credit">
+                        <span>Designed &amp; Built by</span>
+                        <img src={jdLogo} alt="JD" />
+                    </div>
                 </div>
             </footer>
         </div>
