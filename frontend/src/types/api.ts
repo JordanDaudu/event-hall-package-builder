@@ -120,7 +120,15 @@ export type PackageOptionCategory =
     | "DECORATION"
     | "MUSIC"
     | "PHOTOGRAPHY"
-    | "EXTRAS";
+    | "EXTRAS"
+    | "CHUPPAH"
+    | "AISLE"
+    | "TABLE_FRAME"
+    | "TABLE_FLOWER"
+    | "TABLE_CANDLE"
+    | "NAPKIN"
+    | "TABLECLOTH"
+    | "BRIDE_CHAIR";
 
 export interface PackageOptionResponse {
     id: number;

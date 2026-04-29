@@ -14,6 +14,14 @@ import type { PackageOptionResponse, PackageOptionCategory } from "../../types/a
 
 const CATEGORIES: { value: PackageOptionCategory | "ALL"; label: string }[] = [
     { value: "ALL", label: "הכול" },
+    { value: "CHUPPAH", label: "חופה" },
+    { value: "AISLE", label: "שדרה" },
+    { value: "TABLE_FRAME", label: "מסגרת שולחן" },
+    { value: "TABLE_FLOWER", label: "פרח שולחן" },
+    { value: "TABLE_CANDLE", label: "פמוט" },
+    { value: "NAPKIN", label: "מפית" },
+    { value: "TABLECLOTH", label: "מפה" },
+    { value: "BRIDE_CHAIR", label: "כיסא כלה" },
     { value: "CATERING", label: "קייטרינג" },
     { value: "DECORATION", label: "קישוטים" },
     { value: "MUSIC", label: "מוזיקה" },
@@ -22,6 +30,14 @@ const CATEGORIES: { value: PackageOptionCategory | "ALL"; label: string }[] = [
 ];
 
 const CATEGORY_LABELS: Record<PackageOptionCategory, string> = {
+    CHUPPAH: "חופה",
+    AISLE: "שדרה",
+    TABLE_FRAME: "מסגרת שולחן",
+    TABLE_FLOWER: "פרח שולחן",
+    TABLE_CANDLE: "פמוט",
+    NAPKIN: "מפית",
+    TABLECLOTH: "מפה",
+    BRIDE_CHAIR: "כיסא כלה",
     CATERING: "קייטרינג",
     DECORATION: "קישוטים",
     MUSIC: "מוזיקה",

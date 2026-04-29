@@ -314,6 +314,14 @@ export default function AdminCustomerDetailPage() {
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
+    CHUPPAH: "חופה",
+    AISLE: "שדרה",
+    TABLE_FRAME: "מסגרת שולחן",
+    TABLE_FLOWER: "פרח שולחן",
+    TABLE_CANDLE: "פמוט",
+    NAPKIN: "מפית",
+    TABLECLOTH: "מפה",
+    BRIDE_CHAIR: "כיסא כלה",
     CATERING: "קייטרינג",
     DECORATION: "קישוטים",
     MUSIC: "מוזיקה",

@@ -9,7 +9,7 @@ import { listMyPriceOverrides } from "../../api/customerPriceOverrideApi";
 import { submitPackageRequest } from "../../api/packageRequestApi";
 import type { PackageOptionResponse, VenueResponse } from "../../types/api";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// Helpers
 
 function formatILS(n: number) {
     return n.toLocaleString("he-IL", { style: "currency", currency: "ILS", maximumFractionDigits: 0 });
@@ -21,19 +21,7 @@ function todayIso() {
     return d.toISOString().substring(0, 10);
 }
 
-// ─── Category / step labels ───────────────────────────────────────────────────
-
-const STEP_LABELS = [
-    "פרטי אירוע",
-    "חופה",
-    "שדרה",
-    "שולחנות",
-    "מפיות ומפות",
-    "כיסא כלה",
-    "סיכום ושליחה",
-];
-
-// ─── Event details state ──────────────────────────────────────────────────────
+// Event details
 
 interface EventDetails {
     venueId: number | null;
@@ -43,7 +31,7 @@ interface EventDetails {
     eventContactPhoneNumber: string;
 }
 
-// ─── Main builder state ───────────────────────────────────────────────────────
+// Main builder state
 
 interface TableSubSelections {
     frameId: number | null;
@@ -63,7 +51,7 @@ const EMPTY_TABLE_SUBS: TableSubSelections = {
     candleOptionId: null,
 };
 
-// ─── Preview component ────────────────────────────────────────────────────────
+// Preview component
 
 function OptionPreview({
     selected,
@@ -95,7 +83,7 @@ function OptionPreview({
     );
 }
 
-// ─── Generic option grid ──────────────────────────────────────────────────────
+// Generic option grid
 
 function OptionGrid({
     options,
@@ -138,7 +126,7 @@ function OptionGrid({
     );
 }
 
-// ─── Step 0 — Event details ───────────────────────────────────────────────────
+// Step 0 — Event details
 
 function Step0({
     venues,
@@ -225,7 +213,7 @@ function Step0({
     );
 }
 
-// ─── Step 1 — Chuppah (DECORATION) ───────────────────────────────────────────
+// Step 1 — Chuppah (CHUPPAH category)
 
 function Step1Chuppah({
     options,
@@ -261,7 +249,7 @@ function Step1Chuppah({
     );
 }
 
-// ─── Step 2 — Aisle (MUSIC) with filter tabs ──────────────────────────────────
+// Step 2 — Aisle (AISLE category) with filter tabs
 
 function Step2Aisle({
     options,
@@ -279,10 +267,10 @@ function Step2Aisle({
     const [activeTab, setActiveTab] = useState<string>("ALL");
     const selectedOpt = options.find((o) => o.id === selectedId) ?? null;
 
-    // Derive filter tabs from the option names (split into groups by first character of nameHe)
+    // Derive filter tabs from nameEn prefix tokens (optional grouping within the AISLE category)
     const tabs = useMemo(() => {
-        const groups = new Set(options.map((o) => (o.nameEn ? o.nameEn.split(" ")[0] : null)).filter(Boolean));
-        return ["ALL", ...Array.from(groups).slice(0, 3)] as string[];
+        const groups = new Set(options.map((o) => (o.nameEn ? o.nameEn.split(" ")[0] : null)).filter(Boolean) as string[]);
+        return ["ALL", ...Array.from(groups).slice(0, 3)];
     }, [options]);
 
     const visibleOptions = activeTab === "ALL"
@@ -322,29 +310,27 @@ function Step2Aisle({
     );
 }
 
-// ─── Step 3 — Tables (EXTRAS) with sub-steps ─────────────────────────────────
+// Step 3 — Tables with sub-steps (domain-specific pools)
 
 function Step3Tables({
-    options,
+    frameOpts,
+    flowerOpts,
+    candleOpts,
     knightTableCount,
     setKnightTableCount,
     subs,
     setSubs,
     effectivePrice,
 }: {
-    options: PackageOptionResponse[];
+    frameOpts: PackageOptionResponse[];
+    flowerOpts: PackageOptionResponse[];
+    candleOpts: PackageOptionResponse[];
     knightTableCount: number;
     setKnightTableCount: (n: number) => void;
     subs: TableSubSelections;
     setSubs: (s: TableSubSelections) => void;
     effectivePrice: (opt: PackageOptionResponse) => number;
 }) {
-    // Split EXTRAS options into 4 pools for the 4 sub-steps
-    const quarter = Math.ceil(options.length / 4);
-    const frameOpts = options.slice(0, quarter);
-    const primaryFlowerOpts = options.slice(quarter, quarter * 2);
-    const secondaryFlowerOpts = options.slice(quarter * 2, quarter * 3);
-    const candleOpts = options.slice(quarter * 3);
 
     function update<K extends keyof TableSubSelections>(key: K, val: TableSubSelections[K]) {
         setSubs({ ...subs, [key]: val });
@@ -396,11 +382,11 @@ function Step3Tables({
                     )}
 
                     {/* Sub-step B: Primary flower */}
-                    {primaryFlowerOpts.length > 0 && (
+                    {flowerOpts.length > 0 && (
                         <div className="card">
                             <h3 style={{ marginBottom: "12px" }}>פרח ראשי</h3>
                             <OptionGrid
-                                options={primaryFlowerOpts}
+                                options={flowerOpts}
                                 selectedId={subs.primaryFlowerId}
                                 onSelect={(id) => {
                                     const newId = subs.primaryFlowerId === id ? null : id;
@@ -411,15 +397,15 @@ function Step3Tables({
                         </div>
                     )}
 
-                    {/* Sub-step C: Secondary flower (only after primary selected) */}
-                    {subs.primaryFlowerId !== null && secondaryFlowerOpts.length > 0 && (
+                    {/* Sub-step C: Secondary flower (available after primary selected, different option required) */}
+                    {subs.primaryFlowerId !== null && flowerOpts.length > 1 && (
                         <div className="card">
                             <h3 style={{ marginBottom: "6px" }}>פרח משני <span className="muted" style={{ fontSize: "0.82rem", fontWeight: 400 }}>(לא חובה)</span></h3>
                             <p className="muted" style={{ fontSize: "0.84rem", marginBottom: "14px" }}>
                                 בחרו פרח משני להשלמת העיצוב, או דלגו לשלב הבא.
                             </p>
                             <OptionGrid
-                                options={secondaryFlowerOpts}
+                                options={flowerOpts}
                                 selectedId={subs.secondaryFlowerId}
                                 onSelect={(id) => update("secondaryFlowerId", subs.secondaryFlowerId === id ? null : id)}
                                 effectivePrice={effectivePrice}
@@ -489,27 +475,25 @@ function Step3Tables({
     );
 }
 
-// ─── Step 4 — Napkins & Tablecloths (CATERING) — sequential ──────────────────
+// Step 4 — Napkins & Tablecloths (sequential, domain-specific pools)
 
 function Step4NapkinsTablecloths({
-    options,
+    napkinOpts,
+    tableclothOpts,
     napkinId,
     setNapkinId,
     tableclothId,
     setTableclothId,
     effectivePrice,
 }: {
-    options: PackageOptionResponse[];
+    napkinOpts: PackageOptionResponse[];
+    tableclothOpts: PackageOptionResponse[];
     napkinId: number | null;
     setNapkinId: (id: number | null) => void;
     tableclothId: number | null;
     setTableclothId: (id: number | null) => void;
     effectivePrice: (opt: PackageOptionResponse) => number;
 }) {
-    // Split CATERING options: first half = napkins, second half = tablecloths
-    const half = Math.ceil(options.length / 2);
-    const napkinOpts = options.slice(0, half);
-    const tableclothOpts = options.slice(half);
 
     return (
         <div className="builder-step">
@@ -552,7 +536,7 @@ function Step4NapkinsTablecloths({
     );
 }
 
-// ─── Step 5 — Bride Chair (PHOTOGRAPHY) ──────────────────────────────────────
+// Step 5 — Bride Chair (BRIDE_CHAIR category)
 
 function Step5BrideChair({
     options,
@@ -584,7 +568,7 @@ function Step5BrideChair({
     );
 }
 
-// ─── Step 6 — Summary ─────────────────────────────────────────────────────────
+// Step 6 — Summary
 
 function Step6Summary({
     eventDetails,
@@ -690,7 +674,7 @@ function Step6Summary({
     );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
+// Main component
 
 export default function CustomerBuilderPage() {
     const { user } = useAuth();
@@ -716,35 +700,27 @@ export default function CustomerBuilderPage() {
         eventContactPhoneNumber: user?.phoneNumber ?? "",
     });
 
-    // Step 1 — Chuppah (DECORATION)
     const [chuppahId, setChuppahId] = useState<number | null>(null);
-
-    // Step 2 — Aisle (MUSIC)
     const [aisleId, setAisleId] = useState<number | null>(null);
-
-    // Step 3 — Tables (EXTRAS)
     const [knightTableCount, setKnightTableCount] = useState(0);
     const [tableSubs, setTableSubs] = useState<TableSubSelections>({ ...EMPTY_TABLE_SUBS });
-
-    // Step 4 — Napkins & tablecloths (CATERING)
     const [napkinId, setNapkinId] = useState<number | null>(null);
     const [tableclothId, setTableclothId] = useState<number | null>(null);
-
-    // Step 5 — Bride chair (PHOTOGRAPHY)
     const [brideChairId, setBrideChairId] = useState<number | null>(null);
 
-    // ── Submission ────────────────────────────────────────────────────────────
     const [stepError, setStepError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
 
-    // ── Categorised option pools ───────────────────────────────────────────────
-    const decorationOpts = useMemo(() => options.filter((o) => o.category === "DECORATION"), [options]);
-    const musicOpts = useMemo(() => options.filter((o) => o.category === "MUSIC"), [options]);
-    const extrasOpts = useMemo(() => options.filter((o) => o.category === "EXTRAS"), [options]);
-    const cateringOpts = useMemo(() => options.filter((o) => o.category === "CATERING"), [options]);
-    const photographyOpts = useMemo(() => options.filter((o) => o.category === "PHOTOGRAPHY"), [options]);
+    const chuppahOpts = useMemo(() => options.filter((o) => o.category === "CHUPPAH"), [options]);
+    const aisleOpts = useMemo(() => options.filter((o) => o.category === "AISLE"), [options]);
+    const tableFrameOpts = useMemo(() => options.filter((o) => o.category === "TABLE_FRAME"), [options]);
+    const tableFlowerOpts = useMemo(() => options.filter((o) => o.category === "TABLE_FLOWER"), [options]);
+    const tableCandleOpts = useMemo(() => options.filter((o) => o.category === "TABLE_CANDLE"), [options]);
+    const napkinOpts = useMemo(() => options.filter((o) => o.category === "NAPKIN"), [options]);
+    const tableclothOpts = useMemo(() => options.filter((o) => o.category === "TABLECLOTH"), [options]);
+    const brideChairOpts = useMemo(() => options.filter((o) => o.category === "BRIDE_CHAIR"), [options]);
 
     // The venue image for preview background
     const selectedVenueImageUrl = useMemo(() =>
@@ -811,7 +787,6 @@ export default function CustomerBuilderPage() {
     useEffect(() => { setCurrentStep(step); }, [step]);
     useEffect(() => { setRunningTotal(runningTotal); }, [runningTotal]);
 
-    // ── Step validation ───────────────────────────────────────────────────────
     function validateCurrentStep(): string | null {
         switch (step) {
             case 0:
@@ -823,24 +798,24 @@ export default function CustomerBuilderPage() {
                 if (eventDetails.eventDate < todayIso()) return "תאריך האירוע חייב להיות בעתיד";
                 return null;
             case 1:
-                if (decorationOpts.length > 0 && !chuppahId) return "נא לבחור עיצוב חופה";
+                if (chuppahOpts.length > 0 && !chuppahId) return "נא לבחור עיצוב חופה";
                 return null;
             case 2:
-                if (musicOpts.length > 0 && !aisleId) return "נא לבחור סגנון שדרה";
+                if (aisleOpts.length > 0 && !aisleId) return "נא לבחור סגנון שדרה";
                 return null;
             case 3:
                 if (knightTableCount > 0) {
-                    if (extrasOpts.length > 0 && !tableSubs.frameId && Math.ceil(extrasOpts.length / 4) > 0) return "נא לבחור מסגרת שולחן";
+                    if (tableFrameOpts.length > 0 && !tableSubs.frameId) return "נא לבחור מסגרת שולחן";
+                    if (tableFlowerOpts.length > 0 && !tableSubs.primaryFlowerId) return "נא לבחור פרח ראשי";
+                    if (tableCandleOpts.length > 0 && !tableSubs.candleOptionId) return "נא לבחור פמוט";
                 }
                 return null;
             case 4:
-                if (cateringOpts.length > 0) {
-                    if (!napkinId) return "נא לבחור מפית";
-                    if (!tableclothId) return "נא לבחור מפה";
-                }
+                if (napkinOpts.length > 0 && !napkinId) return "נא לבחור מפית";
+                if (tableclothOpts.length > 0 && !tableclothId) return "נא לבחור מפה";
                 return null;
             case 5:
-                if (photographyOpts.length > 0 && !brideChairId) return "נא לבחור כיסא כלה";
+                if (brideChairOpts.length > 0 && !brideChairId) return "נא לבחור כיסא כלה";
                 return null;
             default:
                 return null;
@@ -941,7 +916,7 @@ export default function CustomerBuilderPage() {
             case 1:
                 return (
                     <Step1Chuppah
-                        options={decorationOpts}
+                        options={chuppahOpts}
                         selectedId={chuppahId}
                         onSelect={(id) => setChuppahId(chuppahId === id ? null : id)}
                         effectivePrice={effectivePrice}
@@ -951,7 +926,7 @@ export default function CustomerBuilderPage() {
             case 2:
                 return (
                     <Step2Aisle
-                        options={musicOpts}
+                        options={aisleOpts}
                         selectedId={aisleId}
                         onSelect={(id) => setAisleId(aisleId === id ? null : id)}
                         effectivePrice={effectivePrice}
@@ -961,7 +936,9 @@ export default function CustomerBuilderPage() {
             case 3:
                 return (
                     <Step3Tables
-                        options={extrasOpts}
+                        frameOpts={tableFrameOpts}
+                        flowerOpts={tableFlowerOpts}
+                        candleOpts={tableCandleOpts}
                         knightTableCount={knightTableCount}
                         setKnightTableCount={setKnightTableCount}
                         subs={tableSubs}
@@ -972,7 +949,8 @@ export default function CustomerBuilderPage() {
             case 4:
                 return (
                     <Step4NapkinsTablecloths
-                        options={cateringOpts}
+                        napkinOpts={napkinOpts}
+                        tableclothOpts={tableclothOpts}
                         napkinId={napkinId}
                         setNapkinId={setNapkinId}
                         tableclothId={tableclothId}
@@ -983,7 +961,7 @@ export default function CustomerBuilderPage() {
             case 5:
                 return (
                     <Step5BrideChair
-                        options={photographyOpts}
+                        options={brideChairOpts}
                         selectedId={brideChairId}
                         onSelect={(id) => setBrideChairId(brideChairId === id ? null : id)}
                         effectivePrice={effectivePrice}
