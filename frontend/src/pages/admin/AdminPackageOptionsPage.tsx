@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { usePageTitle } from "../../hooks/usePageTitle";
 import {
     listAllPackageOptions,
@@ -67,6 +68,7 @@ type OptionForm = typeof EMPTY_FORM;
 export default function AdminPackageOptionsPage() {
     usePageTitle("אפשרויות חבילה");
     const { showToast } = useToast();
+    const navigate = useNavigate();
     const [options, setOptions] = useState<PackageOptionResponse[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<PackageOptionCategory | "ALL">("ALL");
@@ -344,6 +346,9 @@ export default function AdminPackageOptionsPage() {
                                             <button className="btn-table" onClick={() => toggleActive(o)} disabled={togglingId === o.id}>
                                                 {o.active ? "השבתה" : "הפעלה"}
                                             </button>
+                                            {o.category === "CHUPPAH" && (
+                                                <button className="btn-table" onClick={() => navigate(`/admin/chuppah-compatibility/${o.id}`)}>התאמות</button>
+                                            )}
                                             <button className="btn-table btn-danger" onClick={() => setDeleteTarget(o)}>מחיקה</button>
                                         </div>
                                     </td>

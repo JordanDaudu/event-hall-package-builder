@@ -50,6 +50,7 @@ function App() {
                             <Route path="venues" element={<AdminVenuesPage />} />
                             <Route path="package-options" element={<AdminPackageOptionsPage />} />
                             <Route path="chuppah-compatibility" element={<AdminChuppahCompatibilityPage />} />
+                            <Route path="chuppah-compatibility/:id" element={<AdminChuppahCompatibilityPage />} />
                             <Route path="requests" element={<AdminRequestsPage />} />
                             <Route path="requests/:id" element={<AdminRequestDetailPage />} />
                         </Route>

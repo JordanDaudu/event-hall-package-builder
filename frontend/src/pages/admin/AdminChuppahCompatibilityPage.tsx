@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
 import { usePageTitle } from "../../hooks/usePageTitle";
 import { useToast } from "../../contexts/ToastContext";
 import {
@@ -12,6 +13,9 @@ import { formatILS } from "../../utils/currency";
 export default function AdminChuppahCompatibilityPage() {
     usePageTitle("התאמות תוספות לחופה");
     const { showToast } = useToast();
+    const { id: idParam } = useParams<{ id?: string }>();
+    const deepLinkId = idParam ? Number(idParam) : null;
+    const didAutoSelect = useRef(false);
 
     const [chuppahs, setChuppahs] = useState<PackageOptionResponse[]>([]);
     const [selectedChuppahId, setSelectedChuppahId] = useState<number | null>(null);
@@ -34,6 +38,16 @@ export default function AdminChuppahCompatibilityPage() {
         }
         load();
     }, []);
+
+    useEffect(() => {
+        if (!loadingChuppahs && deepLinkId != null && !didAutoSelect.current) {
+            const found = chuppahs.find((c) => c.id === deepLinkId);
+            if (found) {
+                didAutoSelect.current = true;
+                selectChuppah(found.id);
+            }
+        }
+    }, [loadingChuppahs, chuppahs, deepLinkId]);
 
     async function selectChuppah(id: number) {
         setSelectedChuppahId(id);
