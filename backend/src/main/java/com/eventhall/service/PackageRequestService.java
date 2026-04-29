@@ -30,7 +30,6 @@ import java.util.List;
 public class PackageRequestService {
 
     private final PackageRequestRepository requestRepository;
-    private final PackageRequestItemRepository itemRepository;
     private final UserAccountRepository userAccountRepository;
     private final PackageOptionRepository packageOptionRepository;
     private final CustomerOptionPriceOverrideRepository overrideRepository;
@@ -39,7 +38,6 @@ public class PackageRequestService {
 
     public PackageRequestService(
             PackageRequestRepository requestRepository,
-            PackageRequestItemRepository itemRepository,
             UserAccountRepository userAccountRepository,
             PackageOptionRepository packageOptionRepository,
             CustomerOptionPriceOverrideRepository overrideRepository,
@@ -47,7 +45,6 @@ public class PackageRequestService {
             VenueService venueService
     ) {
         this.requestRepository = requestRepository;
-        this.itemRepository = itemRepository;
         this.userAccountRepository = userAccountRepository;
         this.packageOptionRepository = packageOptionRepository;
         this.overrideRepository = overrideRepository;
