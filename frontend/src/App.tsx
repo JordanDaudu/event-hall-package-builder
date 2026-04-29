@@ -1,17 +1,18 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { ToastProvider } from "./contexts/ToastContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminLayout from "./layouts/AdminLayout";
 import CustomerLayout from "./layouts/CustomerLayout";
 import LoginPage from "./pages/LoginPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminCustomersPage from "./pages/admin/AdminCustomersPage";
+import AdminCustomerDetailPage from "./pages/admin/AdminCustomerDetailPage";
 import AdminVenuesPage from "./pages/admin/AdminVenuesPage";
 import AdminPackageOptionsPage from "./pages/admin/AdminPackageOptionsPage";
 import AdminRequestsPage from "./pages/admin/AdminRequestsPage";
 import CustomerBuilderPage from "./pages/customer/CustomerBuilderPage";
 
-/** Smart root redirect: authenticated users go straight to their area. */
 function RootRedirect() {
     const { user, loading } = useAuth();
     if (loading) return null;
@@ -23,44 +24,47 @@ function App() {
     return (
         <BrowserRouter>
             <AuthProvider>
-                <Routes>
-                    {/* Public */}
-                    <Route path="/login" element={<LoginPage />} />
+                <ToastProvider>
+                    <Routes>
+                        {/* Public */}
+                        <Route path="/login" element={<LoginPage />} />
 
-                    {/* Root — role-aware redirect */}
-                    <Route path="/" element={<RootRedirect />} />
+                        {/* Root — role-aware redirect */}
+                        <Route path="/" element={<RootRedirect />} />
 
-                    {/* Admin area */}
-                    <Route
-                        path="/admin"
-                        element={
-                            <ProtectedRoute requiredRole="ADMIN">
-                                <AdminLayout />
-                            </ProtectedRoute>
-                        }
-                    >
-                        <Route index element={<AdminDashboard />} />
-                        <Route path="customers" element={<AdminCustomersPage />} />
-                        <Route path="venues" element={<AdminVenuesPage />} />
-                        <Route path="package-options" element={<AdminPackageOptionsPage />} />
-                        <Route path="requests" element={<AdminRequestsPage />} />
-                    </Route>
+                        {/* Admin area */}
+                        <Route
+                            path="/admin"
+                            element={
+                                <ProtectedRoute requiredRole="ADMIN">
+                                    <AdminLayout />
+                                </ProtectedRoute>
+                            }
+                        >
+                            <Route index element={<AdminDashboard />} />
+                            <Route path="customers" element={<AdminCustomersPage />} />
+                            <Route path="customers/:id" element={<AdminCustomerDetailPage />} />
+                            <Route path="venues" element={<AdminVenuesPage />} />
+                            <Route path="package-options" element={<AdminPackageOptionsPage />} />
+                            <Route path="requests" element={<AdminRequestsPage />} />
+                        </Route>
 
-                    {/* Customer area */}
-                    <Route
-                        path="/customer"
-                        element={
-                            <ProtectedRoute requiredRole="CUSTOMER">
-                                <CustomerLayout />
-                            </ProtectedRoute>
-                        }
-                    >
-                        <Route index element={<CustomerBuilderPage />} />
-                    </Route>
+                        {/* Customer area */}
+                        <Route
+                            path="/customer"
+                            element={
+                                <ProtectedRoute requiredRole="CUSTOMER">
+                                    <CustomerLayout />
+                                </ProtectedRoute>
+                            }
+                        >
+                            <Route index element={<CustomerBuilderPage />} />
+                        </Route>
 
-                    {/* Fallback */}
-                    <Route path="*" element={<Navigate to="/login" replace />} />
-                </Routes>
+                        {/* Fallback */}
+                        <Route path="*" element={<Navigate to="/login" replace />} />
+                    </Routes>
+                </ToastProvider>
             </AuthProvider>
         </BrowserRouter>
     );

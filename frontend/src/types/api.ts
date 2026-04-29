@@ -167,6 +167,88 @@ export interface PackageRequestSummaryResponse {
     createdAt: string;
 }
 
+// ─── Admin — Customer Management ─────────────────────────────────────────────
+
+export interface CustomerResponse {
+    id: number;
+    fullName: string;
+    email: string;
+    customerIdentityNumber?: string | null;
+    phoneNumber?: string | null;
+    active: boolean;
+    basePackagePrice: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface CreateCustomerRequest {
+    fullName: string;
+    email: string;
+    customerIdentityNumber?: string;
+    phoneNumber?: string;
+    password: string;
+    basePackagePrice: number;
+}
+
+export interface UpdateCustomerRequest {
+    fullName: string;
+    customerIdentityNumber?: string;
+    phoneNumber?: string;
+    basePackagePrice: number;
+}
+
+export interface ChangePasswordRequest {
+    newPassword: string;
+}
+
+// ─── Admin — Price Overrides ──────────────────────────────────────────────────
+
+export interface PriceOverrideResponse {
+    id: number;
+    customerId: number;
+    optionId: number;
+    customPrice: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface PriceOverrideRequest {
+    optionId: number;
+    customPrice: number;
+}
+
+// ─── Admin — Venue Management ─────────────────────────────────────────────────
+
+export interface CreateVenueRequest {
+    nameHe: string;
+    nameEn?: string;
+    descriptionHe?: string;
+    imageUrl?: string;
+    sortOrder: number;
+}
+
+export type UpdateVenueRequest = CreateVenueRequest;
+
+// ─── Admin — Package Option Management ───────────────────────────────────────
+
+export interface CreatePackageOptionRequest {
+    nameHe: string;
+    nameEn?: string;
+    category: PackageOptionCategory;
+    globalPrice: number;
+    sortOrder?: number;
+}
+
+export interface UpdatePackageOptionRequest {
+    nameHe?: string;
+    nameEn?: string;
+    category?: PackageOptionCategory;
+    globalPrice?: number;
+    sortOrder?: number;
+}
+
+// ─── Package Requests (admin) ─────────────────────────────────────────────────
+
 export interface PackageRequestDetailResponse {
     id: number;
     customerId: number;
