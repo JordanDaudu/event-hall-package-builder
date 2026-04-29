@@ -9,14 +9,14 @@ import java.time.Instant;
 /**
  * A single selected option within a PackageRequest.
  *
- * All price values are snapshotted at submission time:
+ * All price values are snapshotted at submission time so that future price
+ * changes never affect already-submitted or approved requests:
  * - globalPriceSnapshot: the option's global price at submission
  * - customerOverridePriceSnapshot: the customer's price override (null if none existed)
- * - finalPrice: the price actually used (override if present, else global)
+ * - finalPrice: the price actually applied (override if present, else global)
  *
- * The FK to package_options is nullable-in-practice (via FetchType.LAZY)
- * but the snapshot fields ensure historical data is always complete even
- * if the source option is later deleted.
+ * The snapshot fields ensure the full audit trail is self-contained even if
+ * the referenced PackageOption is later deactivated or modified.
  */
 @Entity
 @Table(name = "package_request_items")

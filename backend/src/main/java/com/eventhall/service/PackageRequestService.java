@@ -69,11 +69,20 @@ public class PackageRequestService {
         // Validate and snapshot venue
         Venue venue = venueService.requireActiveVenue(req.venueId());
 
+        // Reject duplicate option IDs — each option can appear at most once per request
+        // to prevent double-charging and duplicate line items.
+        List<Long> optionIds = req.optionIds();
+        long distinctCount = optionIds.stream().distinct().count();
+        if (distinctCount != optionIds.size()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "רשימת האפשרויות מכילה כפילויות. כל אפשרות יכולה להופיע פעם אחת בלבד");
+        }
+
         // Validate and snapshot each selected option
         List<PackageRequestItem> items = new ArrayList<>();
         BigDecimal optionTotal = BigDecimal.ZERO;
 
-        for (Long optionId : req.optionIds()) {
+        for (Long optionId : optionIds) {
             PackageOption option = packageOptionRepository.findById(optionId)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                             "אפשרות חבילה לא נמצאה: " + optionId));
@@ -105,10 +114,14 @@ public class PackageRequestService {
                     .build());
         }
 
-        // Snapshot base price (null-safe: treat null as 0)
-        BigDecimal basePrice = customer.getBasePackagePrice() != null
-                ? customer.getBasePackagePrice()
-                : BigDecimal.ZERO;
+        // Base package price must be configured by an admin before the customer can submit.
+        // A null here indicates an incomplete customer setup — reject immediately with a
+        // clear error rather than silently producing an incorrect locked total of 0.
+        BigDecimal basePrice = customer.getBasePackagePrice();
+        if (basePrice == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "מחיר הבסיס של הלקוח לא הוגדר. אנא פנה לצוות האולם.");
+        }
         BigDecimal totalPrice = basePrice.add(optionTotal);
 
         PackageRequest packageRequest = PackageRequest.builder()
