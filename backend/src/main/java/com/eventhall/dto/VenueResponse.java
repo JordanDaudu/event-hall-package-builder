@@ -2,6 +2,7 @@ package com.eventhall.dto;
 
 import com.eventhall.entity.Venue;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 /**
@@ -17,6 +18,7 @@ public record VenueResponse(
         String imageUrl,
         boolean active,
         int sortOrder,
+        BigDecimal priceModifier,
         Instant createdAt,
         Instant updatedAt
 ) {
@@ -29,6 +31,7 @@ public record VenueResponse(
                 v.getImageUrl(),
                 v.isActive(),
                 v.getSortOrder(),
+                v.getPriceModifier(),
                 v.getCreatedAt(),
                 v.getUpdatedAt()
         );

@@ -3,6 +3,7 @@ package com.eventhall.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 /**
@@ -45,6 +46,14 @@ public class Venue {
 
     @Column(name = "sort_order", nullable = false)
     private int sortOrder;
+
+    /**
+     * Optional price modifier in ILS — not used in Phase 4 pricing logic but
+     * the column is kept so later phases can add venue-based cost adjustments
+     * without a schema migration.
+     */
+    @Column(name = "price_modifier", precision = 12, scale = 2)
+    private BigDecimal priceModifier;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
