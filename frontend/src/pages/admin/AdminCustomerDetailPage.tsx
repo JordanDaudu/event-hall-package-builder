@@ -14,6 +14,7 @@ export default function AdminCustomerDetailPage() {
     const navigate = useNavigate();
     const { showToast } = useToast();
     const customerId = Number(id);
+    const validId = !!id && !isNaN(customerId) && customerId > 0;
 
     const [customer, setCustomer] = useState<CustomerResponse | null>(null);
     const [overrides, setOverrides] = useState<PriceOverrideResponse[]>([]);
@@ -41,7 +42,7 @@ export default function AdminCustomerDetailPage() {
             ]);
             setCustomer(cust);
             setOverrides(ovr);
-            setOptions(opts.filter((o) => o.active));
+            setOptions(opts);
         } catch {
             showToast("שגיאה בטעינת נתוני הלקוח", "error");
         } finally {
@@ -49,7 +50,7 @@ export default function AdminCustomerDetailPage() {
         }
     }
 
-    useEffect(() => { load(); }, [customerId]);
+    useEffect(() => { if (validId) load(); }, [customerId]);
 
     const optionMap = Object.fromEntries(options.map((o) => [o.id, o]));
     const overrideOptionIds = new Set(overrides.map((r) => r.optionId));
@@ -115,6 +116,14 @@ export default function AdminCustomerDetailPage() {
         } finally {
             setDeleting(false);
         }
+    }
+
+    if (!validId) {
+        return (
+            <main className="page">
+                <p className="muted">מזהה לקוח לא תקין.</p>
+            </main>
+        );
     }
 
     if (loading) {
@@ -239,7 +248,7 @@ export default function AdminCustomerDetailPage() {
                                 <option value="">בחר אפשרות...</option>
                                 {availableOptions.map((o) => (
                                     <option key={o.id} value={o.id}>
-                                        {o.nameHe} — {CATEGORY_LABELS[o.category]} — {formatILS(o.globalPrice)}
+                                        {o.nameHe}{!o.active ? " (לא פעיל)" : ""} — {CATEGORY_LABELS[o.category]} — {formatILS(o.globalPrice)}
                                     </option>
                                 ))}
                             </select>
