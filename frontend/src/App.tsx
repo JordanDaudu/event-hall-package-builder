@@ -12,6 +12,7 @@ import AdminVenuesPage from "./pages/admin/AdminVenuesPage";
 import AdminPackageOptionsPage from "./pages/admin/AdminPackageOptionsPage";
 import AdminRequestsPage from "./pages/admin/AdminRequestsPage";
 import CustomerBuilderPage from "./pages/customer/CustomerBuilderPage";
+import CustomerMyRequestsPage from "./pages/customer/CustomerMyRequestsPage";
 
 function RootRedirect() {
     const { user, loading } = useAuth();
@@ -59,6 +60,7 @@ function App() {
                             }
                         >
                             <Route index element={<CustomerBuilderPage />} />
+                            <Route path="my-requests" element={<CustomerMyRequestsPage />} />
                         </Route>
 
                         {/* Fallback */}
