@@ -1,0 +1,68 @@
+modules = ["java-graalvm22.3", "nodejs-20", "web"]
+[agent]
+expertMode = true
+stack = "BEST_EFFORT_FALLBACK"
+
+[nix]
+channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+SPRING_DATASOURCE_URL = "jdbc:postgresql://helium:5432/heliumdb"
+SPRING_DATASOURCE_USERNAME = "postgres"
+SPRING_DATASOURCE_PASSWORD = "password"
+VITE_API_URL = "https://62b32a34-5bbc-44f5-b944-a8a7a33a4d19-00-nud5sngs77w1.sisko.replit.dev/api"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start Backend"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start Backend"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd backend && ./mvnw spring-boot:run -Dspring-boot.run.jvmArguments='-Dserver.port=8080'"
+waitForPort = 8080
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd frontend && npm run dev"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[ports]]
+localPort = 5000
+externalPort = 5000
+
+[[ports]]
+localPort = 8080
+externalPort = 80
+
+[deployment]
+deploymentTarget = "autoscale"
+run = ["bash", "-c", "java -jar backend/target/eventhall-0.0.1-SNAPSHOT.jar --server.port=8080 & cd frontend && npx serve -s dist -l 5000"]
+build = ["bash", "-c", "cd backend && ./mvnw package -DskipTests -q && cd ../frontend && npm install && npm run build"]
