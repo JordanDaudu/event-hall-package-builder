@@ -107,7 +107,7 @@ export default function AdminRequestDetailPage() {
         <main className="page">
             <div className="page-header">
                 <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-                    <button className="button-secondary button-sm" onClick={() => navigate("/admin/requests")}>
+                    <button className="button button-secondary button-sm" onClick={() => navigate("/admin/requests")}>
                         ← חזרה לרשימה
                     </button>
                     <div>
@@ -132,7 +132,7 @@ export default function AdminRequestDetailPage() {
                             אשר ✓
                         </button>
                         <button
-                            className="button-danger"
+                            className="button button-danger"
                             onClick={() => { setModalAction("REJECTED"); setNotes(""); }}
                         >
                             דחה ✕
@@ -281,14 +281,14 @@ export default function AdminRequestDetailPage() {
                 </div>
                 <div className="modal-actions" style={{ marginTop: "20px" }}>
                     <button
-                        className="button-secondary"
+                        className="button button-secondary"
                         onClick={() => setModalAction(null)}
                         disabled={submitting}
                     >
                         ביטול
                     </button>
                     <button
-                        className={modalAction === "APPROVED" ? "button button-success" : "button-danger"}
+                        className={modalAction === "APPROVED" ? "button button-success" : "button button-danger"}
                         onClick={handleConfirm}
                         disabled={submitting}
                     >
