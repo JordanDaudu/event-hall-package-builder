@@ -165,6 +165,7 @@ export type RequestStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 export interface TableDesignRequest {
     frameOptionId: number;
+    primaryFlowerSize: FlowerSizeValue | null;
     primaryFlowerOptionId: number;
     secondarySmallFlowerOptionId?: number | null;
     candleSelectionMode: CandleSelectionMode;

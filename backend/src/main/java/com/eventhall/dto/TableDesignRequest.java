@@ -11,12 +11,19 @@ public record TableDesignRequest(
         /** Required: the frame option chosen for this table. Must be TABLE_FRAME category. */
         Long frameOptionId,
 
+        /**
+         * Required: the primary flower size selected by the customer.
+         * Must be "LARGE" or "SMALL".
+         * The chosen primaryFlowerOptionId must have a matching flowerSize.
+         */
+        String primaryFlowerSize,
+
         /** Required: the primary flower option chosen. Must be TABLE_FLOWER category. */
         Long primaryFlowerOptionId,
 
         /**
          * Optional: a secondary small flower option.
-         * Only allowed when the primary flower has flowerSize=LARGE.
+         * Only allowed when primaryFlowerSize=LARGE.
          * Must be TABLE_FLOWER category with flowerSize=SMALL.
          */
         Long secondarySmallFlowerOptionId,

@@ -37,6 +37,7 @@ interface EventDetails {
 
 interface TableDesignState {
     frameId: number | null;
+    primaryFlowerSize: "LARGE" | "SMALL" | null;
     primaryFlowerId: number | null;
     secondaryFlowerId: number | null;
     candleMode: "RANDOM" | "SELECTED";
@@ -45,6 +46,7 @@ interface TableDesignState {
 
 const EMPTY_TABLE_DESIGN: TableDesignState = {
     frameId: null,
+    primaryFlowerSize: null,
     primaryFlowerId: null,
     secondaryFlowerId: null,
     candleMode: "RANDOM",
@@ -92,6 +94,85 @@ function OptionPreview({
                     </div>
                 </>
             ) : null}
+        </div>
+    );
+}
+
+// TableComposedPreview — three-part composed preview (frame + flowers + candle)
+
+function TableComposedPreview({
+    frameOpt,
+    primaryFlowerOpt,
+    secondaryFlowerOpt,
+    candleMode,
+    selectedCandleOpts,
+    previewCandleOpt,
+}: {
+    frameOpt: PackageOptionResponse | null;
+    primaryFlowerOpt: PackageOptionResponse | null;
+    secondaryFlowerOpt: PackageOptionResponse | null;
+    candleMode: "RANDOM" | "SELECTED";
+    selectedCandleOpts: PackageOptionResponse[];
+    previewCandleOpt: PackageOptionResponse | null;
+}) {
+    const displayCandle = previewCandleOpt ?? (selectedCandleOpts.length > 0 ? selectedCandleOpts[0] : null);
+    const hasContent = frameOpt || primaryFlowerOpt || candleMode === "RANDOM" || selectedCandleOpts.length > 0;
+    if (!hasContent) return null;
+
+    return (
+        <div className="table-composed-preview">
+            {/* Frame part */}
+            <div className="table-preview-part">
+                <div className="table-preview-part-img">
+                    {frameOpt?.imageUrl ? (
+                        <img src={frameOpt.imageUrl} alt={frameOpt.nameHe} />
+                    ) : (
+                        <div className="table-preview-placeholder-icon">🖼</div>
+                    )}
+                </div>
+                <div className="table-preview-part-label">מסגרת</div>
+                <div className="table-preview-part-name">{frameOpt?.nameHe ?? "—"}</div>
+            </div>
+
+            {/* Flower part */}
+            <div className="table-preview-part">
+                <div className="table-preview-part-img">
+                    {primaryFlowerOpt?.imageUrl ? (
+                        <img src={primaryFlowerOpt.imageUrl} alt={primaryFlowerOpt.nameHe} />
+                    ) : (
+                        <div className="table-preview-placeholder-icon">🌸</div>
+                    )}
+                </div>
+                <div className="table-preview-part-label">פרחים</div>
+                <div className="table-preview-part-name">
+                    {primaryFlowerOpt
+                        ? secondaryFlowerOpt
+                            ? `${primaryFlowerOpt.nameHe} + ${secondaryFlowerOpt.nameHe}`
+                            : primaryFlowerOpt.nameHe
+                        : "—"}
+                </div>
+            </div>
+
+            {/* Candle part */}
+            <div className="table-preview-part">
+                <div className="table-preview-part-img">
+                    {candleMode === "RANDOM" ? (
+                        <div className="table-preview-placeholder-icon">🕯</div>
+                    ) : displayCandle?.imageUrl ? (
+                        <img src={displayCandle.imageUrl} alt={displayCandle.nameHe} />
+                    ) : (
+                        <div className="table-preview-placeholder-icon">🕯</div>
+                    )}
+                </div>
+                <div className="table-preview-part-label">פמוטים</div>
+                <div className="table-preview-part-name">
+                    {candleMode === "RANDOM"
+                        ? "בחירה רנדומלית"
+                        : selectedCandleOpts.length > 0
+                            ? `נבחרו ${selectedCandleOpts.length} פמוטים`
+                            : "—"}
+                </div>
+            </div>
         </div>
     );
 }
@@ -472,6 +553,7 @@ function Step2Aisle({
 }
 
 // TableDesignPanel — reusable sub-component for regular/knight table design selections
+// Each panel manages its own internal hover state per section (no shared hover).
 
 function TableDesignPanel({
     label,
@@ -482,8 +564,6 @@ function TableDesignPanel({
     subs,
     setSubs,
     effectivePrice,
-    hoveredId,
-    setHoveredId,
 }: {
     label: string;
     eyebrow: string;
@@ -493,16 +573,59 @@ function TableDesignPanel({
     subs: TableDesignState;
     setSubs: (s: TableDesignState) => void;
     effectivePrice: (opt: PackageOptionResponse) => number;
-    hoveredId: number | null;
-    setHoveredId: (id: number | null) => void;
 }) {
     function update<K extends keyof TableDesignState>(key: K, val: TableDesignState[K]) {
         setSubs({ ...subs, [key]: val });
     }
 
-    const primaryFlowerOpt = flowerOpts.find((o) => o.id === subs.primaryFlowerId) ?? null;
-    const primaryIsLargeOrUnset = !primaryFlowerOpt || !primaryFlowerOpt.flowerSize || primaryFlowerOpt.flowerSize === "LARGE";
+    // Per-section hover states — isolated so panels don't bleed into each other
+    const [hoveredFrameId, setHoveredFrameId] = useState<number | null>(null);
+    const [hoveredPrimaryFlowerId, setHoveredPrimaryFlowerId] = useState<number | null>(null);
+    const [hoveredSecondaryFlowerId, setHoveredSecondaryFlowerId] = useState<number | null>(null);
+    const [hoveredCandleId, setHoveredCandleId] = useState<number | null>(null);
+
+    // Resolve display opts: hover takes precedence over selected
+    const selectedFrameOpt = frameOpts.find((o) => o.id === subs.frameId) ?? null;
+    const previewFrameOpt = (hoveredFrameId !== null ? frameOpts.find((o) => o.id === hoveredFrameId) : null) ?? selectedFrameOpt;
+
+    const largeFlowerOpts = flowerOpts.filter((o) => o.flowerSize === "LARGE" || !o.flowerSize);
     const smallFlowerOpts = flowerOpts.filter((o) => o.flowerSize === "SMALL");
+    const primaryFlowerPool =
+        subs.primaryFlowerSize === "SMALL" ? smallFlowerOpts
+        : subs.primaryFlowerSize === "LARGE" ? largeFlowerOpts
+        : flowerOpts;
+
+    const selectedPrimaryFlowerOpt = flowerOpts.find((o) => o.id === subs.primaryFlowerId) ?? null;
+    const previewPrimaryFlowerOpt =
+        (hoveredPrimaryFlowerId !== null ? flowerOpts.find((o) => o.id === hoveredPrimaryFlowerId) : null)
+        ?? selectedPrimaryFlowerOpt;
+
+    const selectedSecondaryFlowerOpt = subs.secondaryFlowerId !== null
+        ? flowerOpts.find((o) => o.id === subs.secondaryFlowerId) ?? null
+        : null;
+    const previewSecondaryFlowerOpt =
+        (hoveredSecondaryFlowerId !== null ? flowerOpts.find((o) => o.id === hoveredSecondaryFlowerId) : null)
+        ?? selectedSecondaryFlowerOpt;
+
+    const selectedCandleOpts = candleOpts.filter((o) => subs.candleHolderIds.includes(o.id));
+    const previewCandleOpt = hoveredCandleId !== null ? candleOpts.find((o) => o.id === hoveredCandleId) ?? null : null;
+
+    // Secondary flower is only visible when primaryFlowerSize is LARGE and a primary is selected
+    const showSecondaryFlower = subs.primaryFlowerSize === "LARGE" && subs.primaryFlowerId !== null && smallFlowerOpts.length > 0;
+
+    function handleFlowerSizeChange(size: "LARGE" | "SMALL") {
+        setSubs({ ...subs, primaryFlowerSize: size, primaryFlowerId: null, secondaryFlowerId: null });
+    }
+
+    function handleCandleModeChange(mode: "RANDOM" | "SELECTED") {
+        // Always clear candleHolderIds when switching modes
+        setSubs({ ...subs, candleMode: mode, candleHolderIds: [] });
+    }
+
+    function handlePrimaryFlowerSelect(id: number) {
+        const newId = subs.primaryFlowerId === id ? null : id;
+        setSubs({ ...subs, primaryFlowerId: newId, secondaryFlowerId: null });
+    }
 
     return (
         <div style={{ marginBottom: "0" }}>
@@ -510,6 +633,16 @@ function TableDesignPanel({
                 <h3 style={{ marginBottom: "4px" }}>{label}</h3>
                 <p className="muted" style={{ fontSize: "0.85rem", marginBottom: "18px" }}>{eyebrow}</p>
             </div>
+
+            {/* Composed preview — shows current selections / hover state */}
+            <TableComposedPreview
+                frameOpt={previewFrameOpt}
+                primaryFlowerOpt={previewPrimaryFlowerOpt}
+                secondaryFlowerOpt={showSecondaryFlower ? previewSecondaryFlowerOpt : null}
+                candleMode={subs.candleMode}
+                selectedCandleOpts={selectedCandleOpts}
+                previewCandleOpt={previewCandleOpt}
+            />
 
             {/* Frame */}
             {frameOpts.length > 0 && (
@@ -522,35 +655,58 @@ function TableDesignPanel({
                         selectedId={subs.frameId}
                         onSelect={(id) => update("frameId", subs.frameId === id ? null : id)}
                         effectivePrice={effectivePrice}
-                        onHover={setHoveredId}
+                        onHover={setHoveredFrameId}
                     />
                 </div>
             )}
 
-            {/* Primary flower */}
+            {/* Flower section */}
             {flowerOpts.length > 0 && (
                 <div className="card">
-                    <h4 style={{ marginBottom: "12px" }}>
-                        פרח ראשי <span style={{ color: "var(--color-error, #ef4444)", fontSize: "0.8rem" }}>*</span>
-                    </h4>
-                    <OptionGrid
-                        options={flowerOpts}
-                        selectedId={subs.primaryFlowerId}
-                        onSelect={(id) => {
-                            const newId = subs.primaryFlowerId === id ? null : id;
-                            setSubs({ ...subs, primaryFlowerId: newId, secondaryFlowerId: null });
-                        }}
-                        effectivePrice={effectivePrice}
-                        onHover={setHoveredId}
-                    />
+                    <h4 style={{ marginBottom: "14px" }}>בחירת פרחים</h4>
+
+                    {/* Flower size picker — must choose before seeing flower options */}
+                    <p className="muted" style={{ fontSize: "0.86rem", marginBottom: "10px" }}>בחרו סוג פרח ראשי</p>
+                    <div className="flower-size-picker">
+                        <button
+                            type="button"
+                            className={`flower-size-btn${subs.primaryFlowerSize === "LARGE" ? " selected" : ""}`}
+                            onClick={() => handleFlowerSizeChange("LARGE")}
+                        >
+                            🌸 פרח גדול
+                        </button>
+                        <button
+                            type="button"
+                            className={`flower-size-btn${subs.primaryFlowerSize === "SMALL" ? " selected" : ""}`}
+                            onClick={() => handleFlowerSizeChange("SMALL")}
+                        >
+                            🌼 פרח קטן
+                        </button>
+                    </div>
+
+                    {/* Primary flower — shown only after size is chosen */}
+                    {subs.primaryFlowerSize !== null && (
+                        <>
+                            <h5 style={{ margin: "18px 0 10px" }}>
+                                פרח ראשי <span style={{ color: "var(--color-error, #ef4444)", fontSize: "0.8rem" }}>*</span>
+                            </h5>
+                            <OptionGrid
+                                options={primaryFlowerPool}
+                                selectedId={subs.primaryFlowerId}
+                                onSelect={handlePrimaryFlowerSelect}
+                                effectivePrice={effectivePrice}
+                                onHover={setHoveredPrimaryFlowerId}
+                            />
+                        </>
+                    )}
                 </div>
             )}
 
-            {/* Secondary small flower — only when primary is LARGE (or unset) and SMALL options exist */}
-            {subs.primaryFlowerId !== null && primaryIsLargeOrUnset && smallFlowerOpts.length > 0 && (
+            {/* Secondary small flower — only when primary is LARGE and primary is chosen */}
+            {showSecondaryFlower && (
                 <div className="card">
                     <h4 style={{ marginBottom: "6px" }}>
-                        פרח משני קטן
+                        תוספת פרח קטן
                         <span className="muted" style={{ fontSize: "0.82rem", fontWeight: 400, marginInlineStart: "8px" }}>(לא חובה)</span>
                     </h4>
                     <p className="muted" style={{ fontSize: "0.84rem", marginBottom: "14px" }}>
@@ -561,29 +717,29 @@ function TableDesignPanel({
                         selectedId={subs.secondaryFlowerId}
                         onSelect={(id) => update("secondaryFlowerId", subs.secondaryFlowerId === id ? null : id)}
                         effectivePrice={effectivePrice}
-                        onHover={setHoveredId}
+                        onHover={setHoveredSecondaryFlowerId}
                     />
                 </div>
             )}
 
             {/* Candle mode */}
             <div className="card">
-                <h4 style={{ marginBottom: "14px" }}>מצב פמוט</h4>
+                <h4 style={{ marginBottom: "14px" }}>פמוטים</h4>
                 <div className="candle-mode-row">
                     <button
                         type="button"
                         className={`candle-mode-btn${subs.candleMode === "RANDOM" ? " selected" : ""}`}
-                        onClick={() => update("candleMode", "RANDOM")}
+                        onClick={() => handleCandleModeChange("RANDOM")}
                     >
-                        <span>🕯 אקראי</span>
-                        <small>בחירת האולם</small>
+                        <span>🕯 בחירה רנדומלית</span>
+                        <small>האולם בוחר את הפמוטים</small>
                     </button>
                     <button
                         type="button"
                         className={`candle-mode-btn${subs.candleMode === "SELECTED" ? " selected" : ""}`}
-                        onClick={() => update("candleMode", "SELECTED")}
+                        onClick={() => handleCandleModeChange("SELECTED")}
                     >
-                        <span>🕯 בחירה</span>
+                        <span>🕯 בחירה ידנית</span>
                         <small>בחרו פמוטים</small>
                     </button>
                 </div>
@@ -609,8 +765,8 @@ function TableDesignPanel({
                                                 update("candleHolderIds", [...subs.candleHolderIds, opt.id]);
                                             }
                                         }}
-                                        onMouseEnter={() => setHoveredId(opt.id)}
-                                        onMouseLeave={() => setHoveredId(null)}
+                                        onMouseEnter={() => setHoveredCandleId(opt.id)}
+                                        onMouseLeave={() => setHoveredCandleId(null)}
                                     >
                                         {opt.imageUrl && (
                                             <img src={opt.imageUrl} alt={opt.nameHe} className="option-card-thumb" />
@@ -633,6 +789,7 @@ function TableDesignPanel({
 }
 
 // Step 3 — Tables: knight count + regular design (always) + knight design (if count > 0)
+// Each TableDesignPanel manages its own internal hover state — no shared state here.
 
 function Step3Tables({
     regularFrameOpts, regularFlowerOpts, regularCandleOpts,
@@ -640,7 +797,7 @@ function Step3Tables({
     knightTableCount, setKnightTableCount,
     regularSubs, setRegularSubs,
     knightSubs, setKnightSubs,
-    effectivePrice, venueImageUrl,
+    effectivePrice,
 }: {
     regularFrameOpts: PackageOptionResponse[];
     regularFlowerOpts: PackageOptionResponse[];
@@ -655,17 +812,7 @@ function Step3Tables({
     knightSubs: TableDesignState;
     setKnightSubs: (s: TableDesignState) => void;
     effectivePrice: (opt: PackageOptionResponse) => number;
-    venueImageUrl?: string | null;
 }) {
-    const [hoveredId, setHoveredId] = useState<number | null>(null);
-    const allOpts = useMemo(
-        () => [...regularFrameOpts, ...regularFlowerOpts, ...regularCandleOpts, ...knightFrameOpts, ...knightFlowerOpts, ...knightCandleOpts],
-        [regularFrameOpts, regularFlowerOpts, regularCandleOpts, knightFrameOpts, knightFlowerOpts, knightCandleOpts]
-    );
-    const hoveredOpt = hoveredId !== null ? (allOpts.find((o) => o.id === hoveredId) ?? null) : null;
-    const selectedFrameOpt = regularFrameOpts.find((o) => o.id === regularSubs.frameId) ?? null;
-    const previewOpt = hoveredOpt ?? selectedFrameOpt;
-
     return (
         <div className="builder-step">
             <div className="builder-step-header">
@@ -673,8 +820,6 @@ function Step3Tables({
                 <h2>שולחנות</h2>
                 <p>הגדירו את עיצוב השולחנות ואת מספר שולחנות האבירים.</p>
             </div>
-
-            <OptionPreview selected={previewOpt} isHoverPreview={hoveredId !== null} />
 
             {/* Knight count selector */}
             <div className="card">
@@ -709,8 +854,6 @@ function Step3Tables({
                 subs={regularSubs}
                 setSubs={setRegularSubs}
                 effectivePrice={effectivePrice}
-                hoveredId={hoveredId}
-                setHoveredId={setHoveredId}
             />
 
             {/* Knight table design — only when count > 0 */}
@@ -724,8 +867,6 @@ function Step3Tables({
                     subs={knightSubs}
                     setSubs={setKnightSubs}
                     effectivePrice={effectivePrice}
-                    hoveredId={hoveredId}
-                    setHoveredId={setHoveredId}
                 />
             )}
         </div>
@@ -1105,6 +1246,7 @@ export default function CustomerBuilderPage() {
                 return null;
             case 3:
                 if (regularFrameOpts.length > 0 && !regularTableSubs.frameId) return "נא לבחור מסגרת לשולחן הרגיל";
+                if (regularFlowerOpts.length > 0 && !regularTableSubs.primaryFlowerSize) return "נא לבחור סוג פרח (גדול/קטן) לשולחן הרגיל";
                 if (regularFlowerOpts.length > 0 && !regularTableSubs.primaryFlowerId) return "נא לבחור פרח ראשי לשולחן הרגיל";
                 if (regularTableSubs.candleMode === "SELECTED") {
                     if (regularTableSubs.candleHolderIds.length === 0) return "נא לבחור לפחות פמוט אחד לשולחן הרגיל";
@@ -1112,6 +1254,7 @@ export default function CustomerBuilderPage() {
                 }
                 if (knightTableCount > 0) {
                     if (knightFrameOpts.length > 0 && !knightTableSubs.frameId) return "נא לבחור מסגרת לשולחן האביר";
+                    if (knightFlowerOpts.length > 0 && !knightTableSubs.primaryFlowerSize) return "נא לבחור סוג פרח (גדול/קטן) לשולחן האביר";
                     if (knightFlowerOpts.length > 0 && !knightTableSubs.primaryFlowerId) return "נא לבחור פרח ראשי לשולחן האביר";
                     if (knightTableSubs.candleMode === "SELECTED") {
                         if (knightTableSubs.candleHolderIds.length === 0) return "נא לבחור לפחות פמוט אחד לשולחן האביר";
@@ -1148,7 +1291,7 @@ export default function CustomerBuilderPage() {
     // ── Submission ────────────────────────────────────────────────────────────
     async function handleSubmit() {
         if (!eventDetails.venueId || !chuppahId) return;
-        if (!regularTableSubs.frameId || !regularTableSubs.primaryFlowerId) return;
+        if (!regularTableSubs.frameId || !regularTableSubs.primaryFlowerSize || !regularTableSubs.primaryFlowerId) return;
         setSubmitting(true);
         setSubmitError(null);
 
@@ -1160,15 +1303,17 @@ export default function CustomerBuilderPage() {
                 aisleOptionId: aisleId,
                 regularTableDesign: {
                     frameOptionId: regularTableSubs.frameId,
+                    primaryFlowerSize: regularTableSubs.primaryFlowerSize,
                     primaryFlowerOptionId: regularTableSubs.primaryFlowerId,
                     secondarySmallFlowerOptionId: regularTableSubs.secondaryFlowerId,
                     candleSelectionMode: regularTableSubs.candleMode,
                     candleHolderOptionIds: regularTableSubs.candleHolderIds,
                 },
                 knightTableCount: knightTableCount > 0 ? knightTableCount : 0,
-                knightTableDesign: knightTableCount > 0 && knightTableSubs.frameId && knightTableSubs.primaryFlowerId
+                knightTableDesign: knightTableCount > 0 && knightTableSubs.frameId && knightTableSubs.primaryFlowerSize && knightTableSubs.primaryFlowerId
                     ? {
                         frameOptionId: knightTableSubs.frameId,
+                        primaryFlowerSize: knightTableSubs.primaryFlowerSize,
                         primaryFlowerOptionId: knightTableSubs.primaryFlowerId,
                         secondarySmallFlowerOptionId: knightTableSubs.secondaryFlowerId,
                         candleSelectionMode: knightTableSubs.candleMode,
@@ -1294,7 +1439,6 @@ export default function CustomerBuilderPage() {
                         knightSubs={knightTableSubs}
                         setKnightSubs={setKnightTableSubs}
                         effectivePrice={effectivePrice}
-                        venueImageUrl={selectedVenueImageUrl}
                     />
                 );
             case 4:

@@ -2012,6 +2012,123 @@ hr {
     background: rgba(176, 137, 104, 0.08);
 }
 
+/* ---------- Table composed preview ---------- */
+.table-composed-preview {
+    display: flex;
+    gap: 14px;
+    padding: 18px;
+    background: #faf7f3;
+    border-radius: 20px;
+    border: 1px solid rgba(180, 140, 100, 0.22);
+    margin: 0 0 18px;
+    direction: rtl;
+}
+
+.table-preview-part {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 5px;
+}
+
+.table-preview-part-img {
+    width: 100%;
+    height: 110px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #ede5da;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: box-shadow 0.2s;
+}
+
+.table-preview-part-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.table-preview-placeholder-icon {
+    font-size: 1.8rem;
+    opacity: 0.35;
+}
+
+.table-preview-part-label {
+    font-size: 0.72rem;
+    color: var(--color-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.table-preview-part-name {
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    line-height: 1.3;
+    max-width: 100%;
+    word-break: break-word;
+}
+
+@media (max-width: 600px) {
+    .table-composed-preview {
+        gap: 8px;
+        padding: 12px;
+    }
+
+    .table-preview-part-img {
+        height: 72px;
+        border-radius: 10px;
+    }
+
+    .table-preview-part-label {
+        font-size: 0.65rem;
+    }
+
+    .table-preview-part-name {
+        font-size: 0.75rem;
+    }
+}
+
+/* ---------- Flower size picker ---------- */
+.flower-size-picker {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 6px;
+    direction: rtl;
+}
+
+.flower-size-btn {
+    flex: 1;
+    padding: 11px 14px;
+    border: 2px solid var(--color-line-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.93rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    direction: rtl;
+    transition: border-color 0.18s, background 0.18s;
+    text-align: center;
+}
+
+.flower-size-btn.selected {
+    border-color: var(--color-accent);
+    background: rgba(176, 137, 104, 0.09);
+    color: var(--color-accent);
+}
+
+.flower-size-btn:hover:not(.selected) {
+    border-color: rgba(176, 137, 104, 0.5);
+}
+
 /* ---------- Disabled option card ---------- */
 .option-card.disabled {
     opacity: 0.4;

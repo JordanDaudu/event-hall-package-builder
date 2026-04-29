@@ -342,6 +342,18 @@ public class PackageRequestService {
         validateTableContext(frame, tableContext);
         total = total.add(snapshotItemWithContext(customer, frame, tableContext, items));
 
+        // Primary flower size — required, must be LARGE or SMALL
+        String submittedFlowerSize = design.primaryFlowerSize() != null
+                ? design.primaryFlowerSize().toUpperCase() : null;
+        if (submittedFlowerSize == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "יש לבחור גודל פרח ראשי (גדול או קטן) עבור השולחן");
+        }
+        if (!"LARGE".equals(submittedFlowerSize) && !"SMALL".equals(submittedFlowerSize)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "גודל פרח ראשי חייב להיות LARGE או SMALL");
+        }
+
         // Primary flower — required
         if (design.primaryFlowerOptionId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -350,13 +362,19 @@ public class PackageRequestService {
         PackageOption primaryFlower = requireActiveOptionByCategory(
                 design.primaryFlowerOptionId(), PackageOptionCategory.TABLE_FLOWER);
         validateTableContext(primaryFlower, tableContext);
+
+        // Primary flower's actual flowerSize must match the submitted primaryFlowerSize
+        String actualFlowerSize = primaryFlower.getFlowerSize() != null
+                ? primaryFlower.getFlowerSize().toUpperCase() : "LARGE";
+        if (!actualFlowerSize.equals(submittedFlowerSize)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "הפרח הראשי שנבחר אינו תואם לגודל הפרח שנבחר");
+        }
         total = total.add(snapshotItemWithContext(customer, primaryFlower, tableContext, items));
 
-        // Secondary flower — optional, only if primary is LARGE (null treated as LARGE)
+        // Secondary flower — optional, only allowed when primaryFlowerSize=LARGE
         if (design.secondarySmallFlowerOptionId() != null) {
-            String primarySize = primaryFlower.getFlowerSize();
-            boolean primaryIsLarge = primarySize == null || "LARGE".equalsIgnoreCase(primarySize);
-            if (!primaryIsLarge) {
+            if (!"LARGE".equals(submittedFlowerSize)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "לא ניתן לבחור פרח משני כאשר הפרח הראשי אינו פרח גדול");
             }
