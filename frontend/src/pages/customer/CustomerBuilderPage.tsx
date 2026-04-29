@@ -55,38 +55,43 @@ const EMPTY_TABLE_DESIGN: TableDesignState = {
 
 function OptionPreview({
     selected,
-    venueImageUrl,
+    isHoverPreview,
 }: {
     selected: PackageOptionResponse | null;
     venueImageUrl?: string | null;
+    isHoverPreview?: boolean;
 }) {
-    const optionImageUrl = selected?.imageUrl ?? null;
-    const bgUrl = optionImageUrl ?? venueImageUrl ?? null;
-    const isOptionImage = !!optionImageUrl;
+    const imageUrl = selected?.imageUrl ?? null;
+    const isHover = isHoverPreview === true && selected !== null;
 
     return (
-        <div className="option-preview">
-            {bgUrl && (
+        <div className="selected-preview">
+            {imageUrl ? (
                 <img
-                    src={bgUrl}
-                    alt="רקע"
-                    className={`option-preview-bg${isOptionImage ? " option-preview-bg--option" : ""}`}
+                    src={imageUrl}
+                    alt={selected?.nameHe ?? "תמונה"}
+                    className="selected-preview-image"
                 />
+            ) : (
+                <div className="selected-preview-fallback">
+                    <span>{selected ? "אין תמונה זמינה" : "העבירו את העכבר על אפשרות לצפייה"}</span>
+                </div>
             )}
-            <div className="option-preview-overlay" />
-            <div className="option-preview-content">
-                {selected ? (
-                    <>
-                        <div className="option-preview-check">✓</div>
-                        <div className="option-preview-name">{selected.nameHe}</div>
-                        {selected.nameEn && (
-                            <div className="option-preview-name-en">{selected.nameEn}</div>
-                        )}
-                    </>
-                ) : (
-                    <div className="option-preview-placeholder">העבירו את העכבר על אפשרות לצפייה בתצוגה מקדימה</div>
-                )}
-            </div>
+
+            {isHover ? (
+                <div className="preview-overlay">
+                    <span>תצוגה מקדימה</span>
+                    <strong>{selected!.nameHe}</strong>
+                </div>
+            ) : selected ? (
+                <>
+                    <div className="selected-preview-badge">הבחירה הנוכחית</div>
+                    <div className="selected-preview-footer">
+                        <span>הבחירה הנוכחית:</span>
+                        <strong>{selected.nameHe}</strong>
+                    </div>
+                </>
+            ) : null}
         </div>
     );
 }
@@ -251,17 +256,17 @@ function ChuppahPreview({
         ? [hoveredUpgrade].filter((u) => u.visualBehavior === "OVERLAY_IMAGE" && u.imageUrl)
         : selectedUpgrades.filter((u) => u.visualBehavior === "OVERLAY_IMAGE" && u.imageUrl);
 
+    const isHoverPreview = hoveredChuppah !== null || hoveredUpgrade !== null;
+    const hoveredName = hoveredChuppah?.nameHe ?? hoveredUpgrade?.nameHe ?? null;
+
     return (
         <div className="chuppah-preview">
             {/* Background: chuppah image (REPLACE_IMAGE) or venue image as dim backdrop */}
             {chuppahImageUrl ? (
                 <img src={chuppahImageUrl} alt={displayChuppah?.nameHe ?? "חופה"} className="chuppah-preview-main" />
             ) : venueImageUrl ? (
-                <img src={venueImageUrl} alt="רקע" className="option-preview-bg" />
+                <img src={venueImageUrl} alt="רקע" className="chuppah-preview-venue-bg" />
             ) : null}
-
-            {/* Gradient overlay for readability */}
-            <div className="option-preview-overlay" />
 
             {/* Upgrade overlay images */}
             {overlayUpgrades.map((u) => (
@@ -279,20 +284,23 @@ function ChuppahPreview({
                 />
             ))}
 
-            {/* Label */}
-            <div className="option-preview-content">
-                {displayChuppah ? (
-                    <>
-                        <div className="option-preview-check">✓</div>
-                        <div className="option-preview-name">{displayChuppah.nameHe}</div>
-                        {displayChuppah.nameEn && (
-                            <div className="option-preview-name-en">{displayChuppah.nameEn}</div>
-                        )}
-                    </>
-                ) : (
-                    <div className="option-preview-placeholder">לחצו על חופה לצפייה בתצוגה מקדימה</div>
-                )}
-            </div>
+            {/* Labels: hover overlay or selected badge */}
+            {isHoverPreview && hoveredName ? (
+                <div className="preview-overlay">
+                    <span>תצוגה מקדימה</span>
+                    <strong>{hoveredName}</strong>
+                </div>
+            ) : selectedChuppah ? (
+                <>
+                    <div className="selected-preview-badge">הבחירה הנוכחית</div>
+                    <div className="selected-preview-footer">
+                        <span>הבחירה הנוכחית:</span>
+                        <strong>{selectedChuppah.nameHe}</strong>
+                    </div>
+                </>
+            ) : (
+                <div className="chuppah-preview-placeholder">לחצו על חופה לצפייה בתצוגה מקדימה</div>
+            )}
         </div>
     );
 }
@@ -436,7 +444,7 @@ function Step2Aisle({
                 <h2>שדרה</h2>
                 <p>בחרו את סגנון השדרה לכניסה לאולם.</p>
             </div>
-            <OptionPreview selected={previewOpt} venueImageUrl={venueImageUrl} />
+            <OptionPreview selected={previewOpt} isHoverPreview={hoveredId !== null} />
             <div className="card">
                 {tabs.length > 1 && (
                     <div className="tab-bar" style={{ marginBottom: "18px" }}>
@@ -666,7 +674,7 @@ function Step3Tables({
                 <p>הגדירו את עיצוב השולחנות ואת מספר שולחנות האבירים.</p>
             </div>
 
-            <OptionPreview selected={previewOpt} venueImageUrl={venueImageUrl} />
+            <OptionPreview selected={previewOpt} isHoverPreview={hoveredId !== null} />
 
             {/* Knight count selector */}
             <div className="card">
@@ -761,7 +769,7 @@ function Step4NapkinsTablecloths({
                 <p>בחרו מפית ומפה לשולחנות האירוע.</p>
             </div>
 
-            <OptionPreview selected={previewOpt} venueImageUrl={venueImageUrl} />
+            <OptionPreview selected={previewOpt} isHoverPreview={hoveredId !== null} />
 
             <div className="card">
                 <h3 style={{ marginBottom: "14px" }}>מפית</h3>
@@ -825,7 +833,7 @@ function Step5BrideChair({
                 <h2>כיסא כלה</h2>
                 <p>בחרו את עיצוב כיסא הכלה.</p>
             </div>
-            <OptionPreview selected={previewOpt} venueImageUrl={venueImageUrl} />
+            <OptionPreview selected={previewOpt} isHoverPreview={hoveredId !== null} />
             <div className="card">
                 <OptionGrid
                     options={options}
