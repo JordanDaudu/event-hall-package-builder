@@ -108,6 +108,11 @@ public class SecurityConfig {
                         // customer builder (no need to defer until after login).
                         .requestMatchers(HttpMethod.GET, "/api/venues").permitAll()
 
+                        // Public package-option catalog — global prices and option names
+                        // are intentionally visible before login so the builder can
+                        // render the full option list during the selection flow.
+                        .requestMatchers(HttpMethod.GET, "/api/package-options").permitAll()
+
                         // Legacy endpoints — kept open during the migration. These will
                         // either be removed or moved under proper role-based protection
                         // as the new domain model lands.

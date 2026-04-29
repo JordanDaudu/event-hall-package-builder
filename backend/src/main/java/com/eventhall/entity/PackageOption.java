@@ -1,5 +1,6 @@
 package com.eventhall.entity;
 
+import com.eventhall.dto.PackageOptionCategory;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -7,12 +8,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 /**
- * Represents a selectable option within an event package (e.g. catering tier,
- * decoration style, DJ service).
- *
- * Phase 4 scaffold: contains only the fields required so that
- * CustomerOptionPriceOverride can hold a real FK constraint. Full business
- * logic (category, validation, admin CRUD) will be added in Phase 6.
+ * Represents a selectable option within an event package
+ * (e.g. catering tier, decoration style, DJ service).
  *
  * FK contract:
  *   customer_option_price_overrides.option_id → package_options.id ON DELETE CASCADE
@@ -39,8 +36,16 @@ public class PackageOption {
     private String nameEn;
 
     /**
+     * Broad grouping used to organise options in the builder UI.
+     * Stored as a string (not ordinal) so renaming values is safe.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "category", nullable = false, length = 30)
+    private PackageOptionCategory category;
+
+    /**
      * The default price for this option in ILS.
-     * Customer-specific overrides stored in CustomerOptionPriceOverride
+     * Customer-specific overrides in CustomerOptionPriceOverride
      * supersede this value for the relevant customer.
      */
     @Column(name = "global_price", nullable = false, precision = 12, scale = 2)
