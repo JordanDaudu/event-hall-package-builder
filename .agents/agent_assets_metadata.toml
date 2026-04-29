@@ -1,0 +1,20 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "L-vZVq1RAz7aJluS32g60"
+uri = "file://frontend/public/venues/adama-grand-hall.png"
+type = "image"
+title = "grand ballroom wedding hall"
+
+[[generated]]
+id = "12eJdoOonOj-dax1zZJVO"
+uri = "file://frontend/public/venues/adama-garden.png"
+type = "image"
+title = "outdoor garden wedding venue"
+
+[[generated]]
+id = "_eWa-Ny6bKNAoBOKWV1MM"
+uri = "file://frontend/public/venues/adama-premium-hall.png"
+type = "image"
+title = "intimate premium wedding hall"
