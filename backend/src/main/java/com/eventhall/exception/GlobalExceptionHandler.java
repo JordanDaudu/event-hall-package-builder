@@ -8,6 +8,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -104,6 +105,17 @@ public class GlobalExceptionHandler {
         String message = ex.getReason() != null ? ex.getReason() : ex.getMessage();
         return ResponseEntity.status(ex.getStatusCode())
                 .body(Map.of("error", message));
+    }
+
+    /*
+     * In Spring MVC 6.2+ (Spring Boot 4), unmatched routes throw
+     * NoResourceFoundException instead of the old NoHandlerFoundException.
+     * Without this handler it falls through to the catch-all and returns 500.
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Map<String, String>> handleNoResource(NoResourceFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "נתיב לא נמצא"));
     }
 
     /*
