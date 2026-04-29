@@ -1,5 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminLayout from "./layouts/AdminLayout";
 import CustomerLayout from "./layouts/CustomerLayout";
@@ -11,8 +11,12 @@ import AdminPackageOptionsPage from "./pages/admin/AdminPackageOptionsPage";
 import AdminRequestsPage from "./pages/admin/AdminRequestsPage";
 import CustomerBuilderPage from "./pages/customer/CustomerBuilderPage";
 
+/** Smart root redirect: authenticated users go straight to their area. */
 function RootRedirect() {
-    return <Navigate to="/login" replace />;
+    const { user, loading } = useAuth();
+    if (loading) return null;
+    if (!user) return <Navigate to="/login" replace />;
+    return <Navigate to={user.role === "ADMIN" ? "/admin" : "/customer"} replace />;
 }
 
 function App() {
@@ -23,7 +27,7 @@ function App() {
                     {/* Public */}
                     <Route path="/login" element={<LoginPage />} />
 
-                    {/* Root — redirect to login (AuthContext will redirect further if logged in) */}
+                    {/* Root — role-aware redirect */}
                     <Route path="/" element={<RootRedirect />} />
 
                     {/* Admin area */}

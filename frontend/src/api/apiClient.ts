@@ -8,7 +8,7 @@ import axios from "axios";
  * to avoid circular module dependencies.
  */
 export const apiClient = axios.create({
-    baseURL: import.meta.env.VITE_API_URL ?? "/api",
+    baseURL: import.meta.env.VITE_API_BASE_URL ?? import.meta.env.VITE_API_URL ?? "/api",
 });
 
 let _token: string | null = null;
