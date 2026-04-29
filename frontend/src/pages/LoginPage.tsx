@@ -50,7 +50,7 @@ export default function LoginPage() {
                             className="input"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="your@email.com"
+                            placeholder="name@example.com"
                             autoComplete="email"
                             required
                             disabled={submitting}

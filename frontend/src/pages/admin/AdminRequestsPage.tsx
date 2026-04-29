@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { usePageTitle } from "../../hooks/usePageTitle";
 import { listAdminRequests } from "../../api/adminPackageRequestApi";
 import { useToast } from "../../contexts/ToastContext";
@@ -13,7 +13,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_BADGE: Record<string, string> = {
-    PENDING: "badge badge-new",
+    PENDING: "badge badge-pending",
     APPROVED: "badge badge-approved",
     REJECTED: "badge badge-rejected",
 };
@@ -39,10 +39,12 @@ export default function AdminRequestsPage() {
     usePageTitle("בקשות חבילה");
     const { showToast } = useToast();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
 
+    const initialTab = (searchParams.get("status") as FilterTab | null) ?? "ALL";
     const [requests, setRequests] = useState<PackageRequestSummaryResponse[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<FilterTab>("ALL");
+    const [activeTab, setActiveTab] = useState<FilterTab>(initialTab);
 
     useEffect(() => {
         setLoading(true);

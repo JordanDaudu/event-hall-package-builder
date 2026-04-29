@@ -14,7 +14,7 @@ const STATUS_LABELS: Record<RequestStatus, string> = {
 };
 
 const STATUS_BADGE: Record<RequestStatus, string> = {
-    PENDING: "badge badge-new",
+    PENDING: "badge badge-pending",
     APPROVED: "badge badge-approved",
     REJECTED: "badge badge-rejected",
 };
@@ -235,7 +235,7 @@ export default function AdminRequestDetailPage() {
                                     <td style={{ fontWeight: 600 }}>{formatILS(item.finalPrice)}</td>
                                     <td>
                                         {item.hasCustomerOverride && (
-                                            <span className="badge badge-new" style={{ fontSize: "0.75rem" }}>
+                                            <span className="badge badge-active" style={{ fontSize: "0.75rem" }}>
                                                 מחיר מותאם ללקוח
                                             </span>
                                         )}

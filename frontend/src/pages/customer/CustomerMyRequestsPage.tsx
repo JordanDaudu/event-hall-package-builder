@@ -11,7 +11,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_BADGE: Record<string, string> = {
-    PENDING: "badge badge-new",
+    PENDING: "badge badge-pending",
     APPROVED: "badge badge-approved",
     REJECTED: "badge badge-rejected",
 };

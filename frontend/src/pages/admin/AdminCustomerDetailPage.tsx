@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { usePageTitle } from "../../hooks/usePageTitle";
 import { getCustomer } from "../../api/adminCustomerApi";
 import { listPriceOverrides, setPriceOverride, deletePriceOverride } from "../../api/adminPriceOverrideApi";
 import { listAllPackageOptions } from "../../api/adminPackageOptionApi";
@@ -10,6 +11,7 @@ import { formatILS } from "../../utils/currency";
 import type { CustomerResponse, PriceOverrideResponse, PackageOptionResponse } from "../../types/api";
 
 export default function AdminCustomerDetailPage() {
+    usePageTitle("פרטי לקוח");
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { showToast } = useToast();
