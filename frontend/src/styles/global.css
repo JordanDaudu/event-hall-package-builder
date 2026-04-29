@@ -1833,3 +1833,117 @@ hr {
     font-size: 1rem;
     line-height: 1.6;
 }
+
+/* ---------- Admin request detail page ---------- */
+
+.detail-value {
+    color: var(--color-ink);
+    font-size: 0.95rem;
+    flex: 1;
+}
+
+.detail-value-success {
+    color: var(--color-success-fg);
+    font-weight: 600;
+}
+
+.detail-value-danger {
+    color: var(--color-danger-fg);
+    font-weight: 600;
+}
+
+.detail-list {
+    display: grid;
+    gap: 14px;
+}
+
+.detail-row-notes .detail-value {
+    white-space: pre-wrap;
+}
+
+.card-section-title {
+    font-family: var(--font-serif);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--color-line);
+}
+
+.request-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 700px) {
+    .request-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.table-total-row td {
+    background: var(--color-bg);
+    border-top: 1px solid var(--color-line);
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    color: var(--color-muted);
+}
+
+.table-grand-total-row td {
+    background: var(--color-surface);
+    border-top: 2px solid var(--color-line-strong);
+    font-size: 1rem;
+    color: var(--color-ink);
+}
+
+/* ---------- Clickable table rows ---------- */
+
+.clickable-row {
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.clickable-row:hover {
+    background: var(--color-hover, rgba(0,0,0,0.03));
+}
+
+/* ---------- Button variants ---------- */
+
+.button-success {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: var(--color-success-fg);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+}
+
+.button-success:hover:not(:disabled) {
+    opacity: 0.85;
+}
+
+.button-success:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.button-sm {
+    padding: 6px 14px;
+    font-size: 0.82rem;
+}
+
+/* ---------- Requests table ---------- */
+
+.requests-table {
+    table-layout: auto;
+}

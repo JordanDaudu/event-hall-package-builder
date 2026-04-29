@@ -11,6 +11,7 @@ import AdminCustomerDetailPage from "./pages/admin/AdminCustomerDetailPage";
 import AdminVenuesPage from "./pages/admin/AdminVenuesPage";
 import AdminPackageOptionsPage from "./pages/admin/AdminPackageOptionsPage";
 import AdminRequestsPage from "./pages/admin/AdminRequestsPage";
+import AdminRequestDetailPage from "./pages/admin/AdminRequestDetailPage";
 import CustomerBuilderPage from "./pages/customer/CustomerBuilderPage";
 import CustomerMyRequestsPage from "./pages/customer/CustomerMyRequestsPage";
 
@@ -48,6 +49,7 @@ function App() {
                             <Route path="venues" element={<AdminVenuesPage />} />
                             <Route path="package-options" element={<AdminPackageOptionsPage />} />
                             <Route path="requests" element={<AdminRequestsPage />} />
+                            <Route path="requests/:id" element={<AdminRequestDetailPage />} />
                         </Route>
 
                         {/* Customer area */}
