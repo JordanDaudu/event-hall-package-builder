@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePageTitle } from "../../hooks/usePageTitle";
+import { useToast } from "../../contexts/ToastContext";
 import { listAdminRequests } from "../../api/adminPackageRequestApi";
 import { listCustomers } from "../../api/adminCustomerApi";
 import { listAllVenues } from "../../api/adminVenueApi";
@@ -10,6 +11,7 @@ import { formatILS } from "../../utils/currency";
 export default function AdminDashboard() {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const { showToast } = useToast();
     usePageTitle("לוח בקרה");
 
     const [pendingCount, setPendingCount] = useState<number | null>(null);
@@ -28,7 +30,7 @@ export default function AdminDashboard() {
             setCustomerCount(customers.length);
             setVenueCount(venues.filter((v) => v.active).length);
         }).catch(() => {
-            // Non-critical; silently ignore dashboard load errors
+            showToast("שגיאה בטעינת נתוני לוח הבקרה", "error");
         });
     }, []);
 
