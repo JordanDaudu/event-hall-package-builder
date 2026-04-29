@@ -1829,6 +1829,35 @@ hr {
     letter-spacing: 0.02em;
 }
 
+/* ---------- Chuppah visual preview ---------- */
+
+.chuppah-preview {
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    height: 260px;
+    background: var(--color-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.chuppah-preview-main {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+}
+
+.chuppah-preview-upgrade {
+    position: absolute;
+    object-fit: contain;
+    pointer-events: none;
+}
+
 /* ---------- Candle mode selector ---------- */
 .candle-mode-row {
     display: flex;

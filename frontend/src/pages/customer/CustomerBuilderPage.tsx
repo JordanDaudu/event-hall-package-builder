@@ -215,6 +215,69 @@ function Step0({
     );
 }
 
+// Chuppah visual preview (replaces generic OptionPreview for the chuppah step)
+
+function ChuppahPreview({
+    selectedChuppah,
+    selectedUpgrades,
+    venueImageUrl,
+}: {
+    selectedChuppah: PackageOptionResponse | null;
+    selectedUpgrades: PackageOptionResponse[];
+    venueImageUrl?: string | null;
+}) {
+    const chuppahImageUrl =
+        selectedChuppah?.visualBehavior === "REPLACE_IMAGE" ? (selectedChuppah.imageUrl ?? null) : null;
+    const overlayUpgrades = selectedUpgrades.filter(
+        (u) => u.visualBehavior === "OVERLAY_IMAGE" && u.imageUrl,
+    );
+
+    return (
+        <div className="chuppah-preview">
+            {/* Background: chuppah image (REPLACE_IMAGE) or venue image as dim backdrop */}
+            {chuppahImageUrl ? (
+                <img src={chuppahImageUrl} alt={selectedChuppah?.nameHe ?? "חופה"} className="chuppah-preview-main" />
+            ) : venueImageUrl ? (
+                <img src={venueImageUrl} alt="רקע" className="option-preview-bg" />
+            ) : null}
+
+            {/* Gradient overlay for readability */}
+            <div className="option-preview-overlay" />
+
+            {/* Upgrade overlay images */}
+            {overlayUpgrades.map((u) => (
+                <img
+                    key={u.id}
+                    src={u.imageUrl!}
+                    alt={u.nameHe}
+                    className="chuppah-preview-upgrade"
+                    style={{
+                        top: u.overlayTop ?? "0%",
+                        left: u.overlayLeft ?? "0%",
+                        width: u.overlayWidth ?? "100%",
+                        zIndex: u.overlayZIndex ?? 2,
+                    }}
+                />
+            ))}
+
+            {/* Label */}
+            <div className="option-preview-content">
+                {selectedChuppah ? (
+                    <>
+                        <div className="option-preview-check">✓</div>
+                        <div className="option-preview-name">{selectedChuppah.nameHe}</div>
+                        {selectedChuppah.nameEn && (
+                            <div className="option-preview-name-en">{selectedChuppah.nameEn}</div>
+                        )}
+                    </>
+                ) : (
+                    <div className="option-preview-placeholder">לחצו על חופה לצפייה בתצוגה מקדימה</div>
+                )}
+            </div>
+        </div>
+    );
+}
+
 // Step 1 — Chuppah main selection + upgrades
 
 function Step1Chuppah({
@@ -241,6 +304,9 @@ function Step1Chuppah({
     const selectedOpt = chuppahOpts.find((o) => o.id === selectedId) ?? null;
     const compatibleUpgradeIds: number[] = selectedId != null ? (compatibilityMap[selectedId] ?? []) : [];
     const visibleUpgrades = upgradeOpts.filter((u) => compatibleUpgradeIds.includes(u.id));
+    const activeUpgrades = upgradeOpts.filter(
+        (u) => selectedUpgradeIds.includes(u.id) && compatibleUpgradeIds.includes(u.id),
+    );
 
     return (
         <div className="builder-step">
@@ -249,7 +315,11 @@ function Step1Chuppah({
                 <h2>חופה</h2>
                 <p>בחרו את עיצוב החופה לאירועכם.</p>
             </div>
-            <OptionPreview selected={selectedOpt} venueImageUrl={venueImageUrl} />
+            <ChuppahPreview
+                selectedChuppah={selectedOpt}
+                selectedUpgrades={activeUpgrades}
+                venueImageUrl={venueImageUrl}
+            />
             <div className="card">
                 <OptionGrid
                     options={chuppahOpts}
