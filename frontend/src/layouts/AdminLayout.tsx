@@ -6,6 +6,7 @@ const NAV_LINKS = [
     { to: "/admin/customers", label: "לקוחות" },
     { to: "/admin/venues", label: "אולמות" },
     { to: "/admin/package-options", label: "אפשרויות חבילה" },
+    { to: "/admin/chuppah-compatibility", label: "התאמות חופה" },
     { to: "/admin/requests", label: "בקשות" },
 ];
 

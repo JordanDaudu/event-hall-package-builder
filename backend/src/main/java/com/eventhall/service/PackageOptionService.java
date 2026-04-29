@@ -76,6 +76,12 @@ public class PackageOptionService {
                 .globalPrice(req.globalPrice())
                 .active(true)
                 .sortOrder(req.effectiveSortOrder())
+                .imageUrl(req.imageUrl())
+                .visualBehavior(req.visualBehavior())
+                .overlayTop(req.overlayTop())
+                .overlayLeft(req.overlayLeft())
+                .overlayWidth(req.overlayWidth())
+                .overlayZIndex(req.overlayZIndex())
                 .build();
         return PackageOptionResponse.from(optionRepository.save(option));
     }
@@ -90,10 +96,16 @@ public class PackageOptionService {
             }
             option.setNameHe(req.nameHe());
         }
-        if (req.nameEn() != null)       option.setNameEn(req.nameEn());
-        if (req.category() != null)     option.setCategory(req.category());
-        if (req.globalPrice() != null)  option.setGlobalPrice(req.globalPrice());
-        if (req.sortOrder() != null)    option.setSortOrder(req.sortOrder());
+        if (req.nameEn() != null)          option.setNameEn(req.nameEn());
+        if (req.category() != null)        option.setCategory(req.category());
+        if (req.globalPrice() != null)     option.setGlobalPrice(req.globalPrice());
+        if (req.sortOrder() != null)       option.setSortOrder(req.sortOrder());
+        if (req.imageUrl() != null)        option.setImageUrl(req.imageUrl());
+        if (req.visualBehavior() != null)  option.setVisualBehavior(req.visualBehavior());
+        if (req.overlayTop() != null)      option.setOverlayTop(req.overlayTop());
+        if (req.overlayLeft() != null)     option.setOverlayLeft(req.overlayLeft());
+        if (req.overlayWidth() != null)    option.setOverlayWidth(req.overlayWidth());
+        if (req.overlayZIndex() != null)   option.setOverlayZIndex(req.overlayZIndex());
 
         return PackageOptionResponse.from(optionRepository.save(option));
     }

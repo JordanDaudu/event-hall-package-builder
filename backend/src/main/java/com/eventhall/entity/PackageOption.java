@@ -51,6 +51,33 @@ public class PackageOption {
     @Column(name = "global_price", nullable = false, precision = 12, scale = 2)
     private BigDecimal globalPrice;
 
+    /** URL of the option's display image (used in the visual builder). */
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
+    /**
+     * Visual behavior hint for the builder UI.
+     * Values: REPLACE_IMAGE | OVERLAY_IMAGE | NO_VISUAL
+     */
+    @Column(name = "visual_behavior", length = 30)
+    private String visualBehavior;
+
+    /** CSS top position when used as an overlay (e.g. "10%", "40px"). */
+    @Column(name = "overlay_top", length = 30)
+    private String overlayTop;
+
+    /** CSS left position when used as an overlay. */
+    @Column(name = "overlay_left", length = 30)
+    private String overlayLeft;
+
+    /** CSS width when used as an overlay (e.g. "80%", "200px"). */
+    @Column(name = "overlay_width", length = 30)
+    private String overlayWidth;
+
+    /** CSS z-index when used as an overlay. */
+    @Column(name = "overlay_z_index")
+    private Integer overlayZIndex;
+
     /** Controls whether the option appears in the customer-facing builder. */
     @Column(name = "active", nullable = false)
     @Builder.Default

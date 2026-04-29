@@ -10,6 +10,7 @@ import AdminCustomersPage from "./pages/admin/AdminCustomersPage";
 import AdminCustomerDetailPage from "./pages/admin/AdminCustomerDetailPage";
 import AdminVenuesPage from "./pages/admin/AdminVenuesPage";
 import AdminPackageOptionsPage from "./pages/admin/AdminPackageOptionsPage";
+import AdminChuppahCompatibilityPage from "./pages/admin/AdminChuppahCompatibilityPage";
 import AdminRequestsPage from "./pages/admin/AdminRequestsPage";
 import AdminRequestDetailPage from "./pages/admin/AdminRequestDetailPage";
 import CustomerBuilderPage from "./pages/customer/CustomerBuilderPage";
@@ -48,6 +49,7 @@ function App() {
                             <Route path="customers/:id" element={<AdminCustomerDetailPage />} />
                             <Route path="venues" element={<AdminVenuesPage />} />
                             <Route path="package-options" element={<AdminPackageOptionsPage />} />
+                            <Route path="chuppah-compatibility" element={<AdminChuppahCompatibilityPage />} />
                             <Route path="requests" element={<AdminRequestsPage />} />
                             <Route path="requests/:id" element={<AdminRequestDetailPage />} />
                         </Route>

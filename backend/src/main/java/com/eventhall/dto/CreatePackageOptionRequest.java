@@ -27,7 +27,24 @@ public record CreatePackageOptionRequest(
         @DecimalMin(value = "0.0", inclusive = true, message = "המחיר חייב להיות אפס או יותר")
         BigDecimal globalPrice,
 
-        Integer sortOrder
+        Integer sortOrder,
+
+        @Size(max = 500)
+        String imageUrl,
+
+        @Size(max = 30)
+        String visualBehavior,
+
+        @Size(max = 30)
+        String overlayTop,
+
+        @Size(max = 30)
+        String overlayLeft,
+
+        @Size(max = 30)
+        String overlayWidth,
+
+        Integer overlayZIndex
 ) {
     /** Returns the effective sort order, defaulting to 0 if not provided. */
     public int effectiveSortOrder() {

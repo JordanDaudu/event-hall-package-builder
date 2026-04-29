@@ -8,7 +8,8 @@ import { listActiveVenues } from "../../api/venueApi";
 import { listActivePackageOptions } from "../../api/packageOptionApi";
 import { listMyPriceOverrides } from "../../api/customerPriceOverrideApi";
 import { submitPackageRequest } from "../../api/packageRequestApi";
-import type { PackageOptionResponse, VenueResponse } from "../../types/api";
+import { getChuppahCompatibilityMap } from "../../api/chuppahCompatibilityApi";
+import type { ChuppahCompatibilityMap, PackageOptionResponse, VenueResponse } from "../../types/api";
 
 // Helpers
 
@@ -214,22 +215,33 @@ function Step0({
     );
 }
 
-// Step 1 — Chuppah (CHUPPAH category)
+// Step 1 — Chuppah main selection + upgrades
 
 function Step1Chuppah({
-    options,
+    chuppahOpts,
+    upgradeOpts,
     selectedId,
-    onSelect,
+    selectedUpgradeIds,
+    compatibilityMap,
+    onSelectChuppah,
+    onToggleUpgrade,
     effectivePrice,
     venueImageUrl,
 }: {
-    options: PackageOptionResponse[];
+    chuppahOpts: PackageOptionResponse[];
+    upgradeOpts: PackageOptionResponse[];
     selectedId: number | null;
-    onSelect: (id: number) => void;
+    selectedUpgradeIds: number[];
+    compatibilityMap: ChuppahCompatibilityMap;
+    onSelectChuppah: (id: number) => void;
+    onToggleUpgrade: (id: number) => void;
     effectivePrice: (opt: PackageOptionResponse) => number;
     venueImageUrl?: string | null;
 }) {
-    const selectedOpt = options.find((o) => o.id === selectedId) ?? null;
+    const selectedOpt = chuppahOpts.find((o) => o.id === selectedId) ?? null;
+    const compatibleUpgradeIds: number[] = selectedId != null ? (compatibilityMap[selectedId] ?? []) : [];
+    const visibleUpgrades = upgradeOpts.filter((u) => compatibleUpgradeIds.includes(u.id));
+
     return (
         <div className="builder-step">
             <div className="builder-step-header">
@@ -240,11 +252,44 @@ function Step1Chuppah({
             <OptionPreview selected={selectedOpt} venueImageUrl={venueImageUrl} />
             <div className="card">
                 <OptionGrid
-                    options={options}
+                    options={chuppahOpts}
                     selectedId={selectedId}
-                    onSelect={onSelect}
+                    onSelect={onSelectChuppah}
                     effectivePrice={effectivePrice}
                 />
+            </div>
+
+            <div className="card" style={{ marginTop: "20px" }}>
+                <h3 style={{ marginBottom: "8px" }}>תוספות לחופה</h3>
+                <p className="muted" style={{ marginBottom: "16px", fontSize: "0.9rem" }}>
+                    בחרו תוספות זמינות עבור החופה שנבחרה.
+                </p>
+                {selectedId == null ? (
+                    <p className="muted">בחרו חופה כדי לראות תוספות זמינות.</p>
+                ) : visibleUpgrades.length === 0 ? (
+                    <p className="muted">אין תוספות זמינות לחופה זו.</p>
+                ) : (
+                    <div className="option-card-grid">
+                        {visibleUpgrades.map((u) => {
+                            const isSelected = selectedUpgradeIds.includes(u.id);
+                            return (
+                                <button
+                                    key={u.id}
+                                    type="button"
+                                    className={`option-card${isSelected ? " selected" : ""}`}
+                                    onClick={() => onToggleUpgrade(u.id)}
+                                >
+                                    <div className="option-card-inner">
+                                        <div className="option-card-name">{u.nameHe}</div>
+                                        {u.nameEn && <div className="option-card-name-en">{u.nameEn}</div>}
+                                        <div className="option-card-price">+{formatILS(effectivePrice(u))}</div>
+                                    </div>
+                                    {isSelected && <div className="option-card-check">✓</div>}
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -689,6 +734,7 @@ export default function CustomerBuilderPage() {
     const [venues, setVenues] = useState<VenueResponse[]>([]);
     const [options, setOptions] = useState<PackageOptionResponse[]>([]);
     const [overrideMap, setOverrideMap] = useState<Record<number, number>>({});
+    const [compatibilityMap, setCompatibilityMap] = useState<ChuppahCompatibilityMap>({});
 
     // ── Step state ────────────────────────────────────────────────────────────
     const [step, setStep] = useState(0);
@@ -703,6 +749,7 @@ export default function CustomerBuilderPage() {
     });
 
     const [chuppahId, setChuppahId] = useState<number | null>(null);
+    const [selectedChuppahUpgradeIds, setSelectedChuppahUpgradeIds] = useState<number[]>([]);
     const [aisleId, setAisleId] = useState<number | null>(null);
     const [knightTableCount, setKnightTableCount] = useState(0);
     const [tableSubs, setTableSubs] = useState<TableSubSelections>({ ...EMPTY_TABLE_SUBS });
@@ -716,6 +763,7 @@ export default function CustomerBuilderPage() {
     const [submitError, setSubmitError] = useState<string | null>(null);
 
     const chuppahOpts = useMemo(() => options.filter((o) => o.category === "CHUPPAH"), [options]);
+    const chuppahUpgradeOpts = useMemo(() => options.filter((o) => o.category === "CHUPPAH_UPGRADE"), [options]);
     const aisleOpts = useMemo(() => options.filter((o) => o.category === "AISLE"), [options]);
     const tableFrameOpts = useMemo(() => options.filter((o) => o.category === "TABLE_FRAME"), [options]);
     const tableFlowerOpts = useMemo(() => options.filter((o) => o.category === "TABLE_FLOWER"), [options]);
@@ -734,16 +782,18 @@ export default function CustomerBuilderPage() {
     useEffect(() => {
         async function load() {
             try {
-                const [v, opts, overrides] = await Promise.all([
+                const [v, opts, overrides, compat] = await Promise.all([
                     listActiveVenues(),
                     listActivePackageOptions(),
                     listMyPriceOverrides(),
+                    getChuppahCompatibilityMap(),
                 ]);
                 setVenues(v);
                 setOptions(opts);
                 const map: Record<number, number> = {};
                 for (const o of overrides) map[o.optionId] = o.customPrice;
                 setOverrideMap(map);
+                setCompatibilityMap(compat);
             } catch {
                 showToast("שגיאה בטעינת נתוני הבונה", "error");
             } finally {
@@ -762,6 +812,7 @@ export default function CustomerBuilderPage() {
 
     const allSelectedIds = useMemo(() => [
         chuppahId,
+        ...selectedChuppahUpgradeIds,
         aisleId,
         tableSubs.frameId,
         tableSubs.primaryFlowerId,
@@ -771,7 +822,7 @@ export default function CustomerBuilderPage() {
         tableclothId,
         brideChairId,
     ].filter((id): id is number => id !== null), [
-        chuppahId, aisleId, tableSubs, napkinId, tableclothId, brideChairId
+        chuppahId, selectedChuppahUpgradeIds, aisleId, tableSubs, napkinId, tableclothId, brideChairId
     ]);
 
     const selectedOptionObjects = useMemo(() =>
@@ -840,18 +891,33 @@ export default function CustomerBuilderPage() {
 
     // ── Submission ────────────────────────────────────────────────────────────
     async function handleSubmit() {
-        if (!eventDetails.venueId) return;
+        if (!eventDetails.venueId || !chuppahId) return;
         setSubmitting(true);
         setSubmitError(null);
+
+        // Build optionIds for remaining sections (exclude chuppah, upgrades, aisle — sent explicitly)
+        const otherOptionIds = [
+            tableSubs.frameId,
+            tableSubs.primaryFlowerId,
+            tableSubs.secondaryFlowerId,
+            tableSubs.candleOptionId,
+            napkinId,
+            tableclothId,
+            brideChairId,
+        ].filter((id): id is number => id !== null);
+
         try {
             await submitPackageRequest({
                 venueId: eventDetails.venueId,
+                chuppahOptionId: chuppahId,
+                chuppahUpgradeIds: selectedChuppahUpgradeIds,
+                aisleOptionId: aisleId,
                 eventContactName: eventDetails.eventContactName,
                 eventCustomerIdentityNumber: eventDetails.eventCustomerIdentityNumber,
                 eventContactPhoneNumber: eventDetails.eventContactPhoneNumber,
                 eventDate: eventDetails.eventDate,
                 knightTableCount: knightTableCount > 0 ? knightTableCount : null,
-                optionIds: allSelectedIds,
+                optionIds: otherOptionIds,
             });
             setSubmitted(true);
         } catch (err: unknown) {
@@ -888,7 +954,7 @@ export default function CustomerBuilderPage() {
                         <button
                             className="button"
                             onClick={() => {
-                                setStep(0); setChuppahId(null); setAisleId(null);
+                                setStep(0); setChuppahId(null); setSelectedChuppahUpgradeIds([]); setAisleId(null);
                                 setKnightTableCount(0); setTableSubs({ ...EMPTY_TABLE_SUBS });
                                 setNapkinId(null); setTableclothId(null); setBrideChairId(null);
                                 setEventDetails({
@@ -918,9 +984,20 @@ export default function CustomerBuilderPage() {
             case 1:
                 return (
                     <Step1Chuppah
-                        options={chuppahOpts}
+                        chuppahOpts={chuppahOpts}
+                        upgradeOpts={chuppahUpgradeOpts}
                         selectedId={chuppahId}
-                        onSelect={(id) => setChuppahId(chuppahId === id ? null : id)}
+                        selectedUpgradeIds={selectedChuppahUpgradeIds}
+                        compatibilityMap={compatibilityMap}
+                        onSelectChuppah={(id) => {
+                            setChuppahId(chuppahId === id ? null : id);
+                            setSelectedChuppahUpgradeIds([]);
+                        }}
+                        onToggleUpgrade={(id) => {
+                            setSelectedChuppahUpgradeIds((prev) =>
+                                prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+                            );
+                        }}
                         effectivePrice={effectivePrice}
                         venueImageUrl={selectedVenueImageUrl}
                     />

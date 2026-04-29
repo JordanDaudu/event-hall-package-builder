@@ -19,6 +19,12 @@ public record PackageOptionResponse(
         BigDecimal globalPrice,
         boolean active,
         int sortOrder,
+        String imageUrl,
+        String visualBehavior,
+        String overlayTop,
+        String overlayLeft,
+        String overlayWidth,
+        Integer overlayZIndex,
         Instant createdAt,
         Instant updatedAt
 ) {
@@ -31,6 +37,12 @@ public record PackageOptionResponse(
                 o.getGlobalPrice(),
                 o.isActive(),
                 o.getSortOrder(),
+                o.getImageUrl(),
+                o.getVisualBehavior(),
+                o.getOverlayTop(),
+                o.getOverlayLeft(),
+                o.getOverlayWidth(),
+                o.getOverlayZIndex(),
                 o.getCreatedAt(),
                 o.getUpdatedAt()
         );

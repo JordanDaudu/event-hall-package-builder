@@ -122,6 +122,7 @@ export type PackageOptionCategory =
     | "PHOTOGRAPHY"
     | "EXTRAS"
     | "CHUPPAH"
+    | "CHUPPAH_UPGRADE"
     | "AISLE"
     | "TABLE_FRAME"
     | "TABLE_FLOWER"
@@ -129,6 +130,8 @@ export type PackageOptionCategory =
     | "NAPKIN"
     | "TABLECLOTH"
     | "BRIDE_CHAIR";
+
+export type VisualBehavior = "REPLACE_IMAGE" | "OVERLAY_IMAGE" | "NO_VISUAL";
 
 export interface PackageOptionResponse {
     id: number;
@@ -138,7 +141,15 @@ export interface PackageOptionResponse {
     globalPrice: number;
     active: boolean;
     sortOrder: number;
+    imageUrl?: string | null;
+    visualBehavior?: VisualBehavior | null;
+    overlayTop?: string | null;
+    overlayLeft?: string | null;
+    overlayWidth?: string | null;
+    overlayZIndex?: number | null;
 }
+
+export type ChuppahCompatibilityMap = Record<number, number[]>;
 
 // ─── Package Requests ────────────────────────────────────────────────────────
 
@@ -146,6 +157,9 @@ export type RequestStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 export interface SubmitRequestRequest {
     venueId: number;
+    chuppahOptionId: number;
+    chuppahUpgradeIds: number[];
+    aisleOptionId?: number | null;
     optionIds: number[];
     eventCustomerIdentityNumber: string;
     eventContactName: string;
@@ -245,6 +259,12 @@ export interface CreatePackageOptionRequest {
     category: PackageOptionCategory;
     globalPrice: number;
     sortOrder?: number;
+    imageUrl?: string;
+    visualBehavior?: VisualBehavior;
+    overlayTop?: string;
+    overlayLeft?: string;
+    overlayWidth?: string;
+    overlayZIndex?: number;
 }
 
 export interface UpdatePackageOptionRequest {
@@ -253,6 +273,20 @@ export interface UpdatePackageOptionRequest {
     category?: PackageOptionCategory;
     globalPrice?: number;
     sortOrder?: number;
+    imageUrl?: string;
+    visualBehavior?: VisualBehavior;
+    overlayTop?: string;
+    overlayLeft?: string;
+    overlayWidth?: string;
+    overlayZIndex?: number;
+}
+
+// ─── Chuppah Compatibility ────────────────────────────────────────────────────
+
+export interface ChuppahCompatibilityResponse {
+    chuppah: PackageOptionResponse;
+    availableUpgrades: PackageOptionResponse[];
+    allowedUpgradeIds: number[];
 }
 
 // ─── Package Requests (admin) ─────────────────────────────────────────────────

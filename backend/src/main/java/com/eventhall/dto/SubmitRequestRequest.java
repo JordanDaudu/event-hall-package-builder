@@ -10,13 +10,27 @@ import java.util.List;
  *
  * The customer id is never accepted from this body; it is always extracted
  * from the authenticated JWT principal.
+ *
+ * Chuppah fields are explicit so the backend can validate compatibility rules:
+ *   chuppahOptionId  — must reference a CHUPPAH option (required if any CHUPPAH options exist)
+ *   chuppahUpgradeIds — must all reference CHUPPAH_UPGRADE options compatible with the chosen chuppah
+ *   aisleOptionId    — explicit aisle selection (AISLE category)
+ *
+ * optionIds carries all remaining options (tables, napkins, tablecloth, bride chair, etc.)
+ * and must NOT include the chuppah or chuppah upgrades to avoid double-counting.
  */
 public record SubmitRequestRequest(
 
         @NotNull(message = "יש לבחור אולם")
         Long venueId,
 
-        @NotEmpty(message = "יש לבחור לפחות אפשרות חבילה אחת")
+        @NotNull(message = "יש לבחור חופה")
+        Long chuppahOptionId,
+
+        List<Long> chuppahUpgradeIds,
+
+        Long aisleOptionId,
+
         List<@NotNull Long> optionIds,
 
         @NotBlank(message = "מספר תעודת זהות הוא שדה חובה")
@@ -39,4 +53,13 @@ public record SubmitRequestRequest(
         @Max(value = 100, message = "מספר שולחנות הפרשים גבוה מדי")
         Integer knightTableCount
 ) {
+    /** Safe accessor — returns an empty list if chuppahUpgradeIds is null. */
+    public List<Long> safeUpgradeIds() {
+        return chuppahUpgradeIds != null ? chuppahUpgradeIds : List.of();
+    }
+
+    /** Safe accessor — returns an empty list if optionIds is null. */
+    public List<Long> safeOptionIds() {
+        return optionIds != null ? optionIds : List.of();
+    }
 }

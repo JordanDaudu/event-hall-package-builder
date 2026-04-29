@@ -35,6 +35,7 @@ public class PackageRequestService {
     private final CustomerOptionPriceOverrideRepository overrideRepository;
     private final PricingLookupService pricingLookupService;
     private final VenueService venueService;
+    private final OptionCompatibilityRuleRepository compatibilityRuleRepository;
 
     public PackageRequestService(
             PackageRequestRepository requestRepository,
@@ -42,7 +43,8 @@ public class PackageRequestService {
             PackageOptionRepository packageOptionRepository,
             CustomerOptionPriceOverrideRepository overrideRepository,
             PricingLookupService pricingLookupService,
-            VenueService venueService
+            VenueService venueService,
+            OptionCompatibilityRuleRepository compatibilityRuleRepository
     ) {
         this.requestRepository = requestRepository;
         this.userAccountRepository = userAccountRepository;
@@ -50,6 +52,7 @@ public class PackageRequestService {
         this.overrideRepository = overrideRepository;
         this.pricingLookupService = pricingLookupService;
         this.venueService = venueService;
+        this.compatibilityRuleRepository = compatibilityRuleRepository;
     }
 
     // -----------------------------------------------------------------------
@@ -69,20 +72,83 @@ public class PackageRequestService {
         // Validate and snapshot venue
         Venue venue = venueService.requireActiveVenue(req.venueId());
 
-        // Reject duplicate option IDs — each option can appear at most once per request
-        // to prevent double-charging and duplicate line items.
-        List<Long> optionIds = req.optionIds();
-        long distinctCount = optionIds.stream().distinct().count();
-        if (distinctCount != optionIds.size()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "רשימת האפשרויות מכילה כפילויות. כל אפשרות יכולה להופיע פעם אחת בלבד");
-        }
-
-        // Validate and snapshot each selected option
         List<PackageRequestItem> items = new ArrayList<>();
         BigDecimal optionTotal = BigDecimal.ZERO;
 
-        for (Long optionId : optionIds) {
+        // ── 1. Validate and snapshot the main chuppah ──────────────────────
+        PackageOption chuppah = packageOptionRepository.findById(req.chuppahOptionId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "חופה לא נמצאה: " + req.chuppahOptionId()));
+        if (!chuppah.isActive()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "החופה \"" + chuppah.getNameHe() + "\" אינה זמינה כרגע");
+        }
+        if (chuppah.getCategory() != PackageOptionCategory.CHUPPAH) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "האפשרות שנבחרה אינה חופה ראשית");
+        }
+        optionTotal = optionTotal.add(snapshotItem(customer, chuppah, items));
+
+        // ── 2. Validate and snapshot chuppah upgrades ──────────────────────
+        List<Long> upgradeIds = req.safeUpgradeIds();
+        long distinctUpgrades = upgradeIds.stream().distinct().count();
+        if (distinctUpgrades != upgradeIds.size()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "רשימת תוספות החופה מכילה כפילויות");
+        }
+        for (Long upgradeId : upgradeIds) {
+            PackageOption upgrade = packageOptionRepository.findById(upgradeId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "תוספת חופה לא נמצאה: " + upgradeId));
+            if (!upgrade.isActive()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "תוספת החופה \"" + upgrade.getNameHe() + "\" אינה זמינה כרגע");
+            }
+            if (upgrade.getCategory() != PackageOptionCategory.CHUPPAH_UPGRADE) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "\"" + upgrade.getNameHe() + "\" אינה תוספת חופה");
+            }
+            // Enforce compatibility rule
+            if (!compatibilityRuleRepository.existsByParentOption_IdAndChildOption_IdAndActiveTrue(
+                    chuppah.getId(), upgradeId)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "תוספת החופה \"" + upgrade.getNameHe() + "\" אינה תואמת לחופה שנבחרה");
+            }
+            optionTotal = optionTotal.add(snapshotItem(customer, upgrade, items));
+        }
+
+        // ── 3. Validate and snapshot aisle (optional) ──────────────────────
+        if (req.aisleOptionId() != null) {
+            PackageOption aisle = packageOptionRepository.findById(req.aisleOptionId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "שדרה לא נמצאה: " + req.aisleOptionId()));
+            if (!aisle.isActive()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "השדרה \"" + aisle.getNameHe() + "\" אינה זמינה כרגע");
+            }
+            if (aisle.getCategory() != PackageOptionCategory.AISLE) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "האפשרות שנבחרה אינה שדרה");
+            }
+            optionTotal = optionTotal.add(snapshotItem(customer, aisle, items));
+        }
+
+        // ── 4. Validate and snapshot remaining options ──────────────────────
+        List<Long> otherOptionIds = req.safeOptionIds();
+        long distinctOther = otherOptionIds.stream().distinct().count();
+        if (distinctOther != otherOptionIds.size()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "רשימת האפשרויות מכילה כפילויות. כל אפשרות יכולה להופיע פעם אחת בלבד");
+        }
+        // Guard against chuppah/upgrade being passed again in optionIds
+        for (Long optId : otherOptionIds) {
+            if (optId.equals(req.chuppahOptionId()) || upgradeIds.contains(optId)
+                    || (req.aisleOptionId() != null && optId.equals(req.aisleOptionId()))) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "אפשרות " + optId + " כבר נכללת בחלקים אחרים של הבקשה");
+            }
+        }
+        for (Long optionId : otherOptionIds) {
             PackageOption option = packageOptionRepository.findById(optionId)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                             "אפשרות חבילה לא נמצאה: " + optionId));
@@ -90,33 +156,10 @@ public class PackageRequestService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "אפשרות החבילה \"" + option.getNameHe() + "\" אינה זמינה כרגע");
             }
-
-            BigDecimal globalPrice = option.getGlobalPrice();
-
-            // Snapshot the customer override (null if none) — stored for audit trail.
-            // Final price is always resolved through the dedicated pricing service so
-            // any future changes to the pricing rule stay in one place.
-            var maybeOverride = overrideRepository
-                    .findByCustomerIdAndPackageOption_Id(customer.getId(), optionId);
-            BigDecimal overridePrice = maybeOverride
-                    .map(o -> o.getCustomPrice())
-                    .orElse(null);
-            BigDecimal finalPrice = pricingLookupService.resolvePrice(customer.getId(), option);
-
-            optionTotal = optionTotal.add(finalPrice);
-
-            items.add(PackageRequestItem.builder()
-                    .packageOption(option)
-                    .optionNameSnapshot(option.getNameHe())
-                    .globalPriceSnapshot(globalPrice)
-                    .customerOverridePriceSnapshot(overridePrice)
-                    .finalPrice(finalPrice)
-                    .build());
+            optionTotal = optionTotal.add(snapshotItem(customer, option, items));
         }
 
-        // Base package price must be configured by an admin before the customer can submit.
-        // A null here indicates an incomplete customer setup — reject immediately with a
-        // clear error rather than silently producing an incorrect locked total of 0.
+        // ── 5. Total ────────────────────────────────────────────────────────
         BigDecimal basePrice = customer.getBasePackagePrice();
         if (basePrice == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -234,6 +277,28 @@ public class PackageRequestService {
                 .map(PackageRequestItemResponse::from)
                 .toList();
         return PackageRequestDetailResponse.from(request, itemResponses);
+    }
+
+    /**
+     * Resolves pricing for one option, creates a snapshot item, adds it to the list,
+     * and returns the finalPrice so the caller can accumulate the total.
+     */
+    private BigDecimal snapshotItem(UserAccount customer, PackageOption option,
+                                    List<PackageRequestItem> items) {
+        BigDecimal globalPrice = option.getGlobalPrice();
+        var maybeOverride = overrideRepository
+                .findByCustomerIdAndPackageOption_Id(customer.getId(), option.getId());
+        BigDecimal overridePrice = maybeOverride.map(o -> o.getCustomPrice()).orElse(null);
+        BigDecimal finalPrice = pricingLookupService.resolvePrice(customer.getId(), option);
+
+        items.add(PackageRequestItem.builder()
+                .packageOption(option)
+                .optionNameSnapshot(option.getNameHe())
+                .globalPriceSnapshot(globalPrice)
+                .customerOverridePriceSnapshot(overridePrice)
+                .finalPrice(finalPrice)
+                .build());
+        return finalPrice;
     }
 
     private UserAccount requireActiveCustomer(String email) {

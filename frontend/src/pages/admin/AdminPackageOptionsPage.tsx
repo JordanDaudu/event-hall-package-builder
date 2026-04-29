@@ -11,11 +11,12 @@ import { useToast } from "../../contexts/ToastContext";
 import Modal from "../../components/Modal";
 import ConfirmDeleteDialog from "../../components/ConfirmDeleteDialog";
 import { formatILS } from "../../utils/currency";
-import type { PackageOptionResponse, PackageOptionCategory } from "../../types/api";
+import type { PackageOptionResponse, PackageOptionCategory, VisualBehavior } from "../../types/api";
 
 const CATEGORIES: { value: PackageOptionCategory | "ALL"; label: string }[] = [
     { value: "ALL", label: "הכול" },
     { value: "CHUPPAH", label: "חופה" },
+    { value: "CHUPPAH_UPGRADE", label: "תוספת לחופה" },
     { value: "AISLE", label: "שדרה" },
     { value: "TABLE_FRAME", label: "מסגרת שולחן" },
     { value: "TABLE_FLOWER", label: "פרח שולחן" },
@@ -32,6 +33,7 @@ const CATEGORIES: { value: PackageOptionCategory | "ALL"; label: string }[] = [
 
 const CATEGORY_LABELS: Record<PackageOptionCategory, string> = {
     CHUPPAH: "חופה",
+    CHUPPAH_UPGRADE: "תוספת לחופה",
     AISLE: "שדרה",
     TABLE_FRAME: "מסגרת שולחן",
     TABLE_FLOWER: "פרח שולחן",
@@ -52,6 +54,12 @@ const EMPTY_FORM = {
     category: "CATERING" as PackageOptionCategory,
     globalPrice: "",
     sortOrder: "0",
+    imageUrl: "",
+    visualBehavior: "" as "" | "REPLACE_IMAGE" | "OVERLAY_IMAGE" | "NO_VISUAL",
+    overlayTop: "",
+    overlayLeft: "",
+    overlayWidth: "",
+    overlayZIndex: "",
 };
 
 type OptionForm = typeof EMPTY_FORM;
@@ -98,6 +106,12 @@ export default function AdminPackageOptionsPage() {
             category: o.category,
             globalPrice: String(o.globalPrice),
             sortOrder: String(o.sortOrder),
+            imageUrl: o.imageUrl ?? "",
+            visualBehavior: (o.visualBehavior ?? "") as OptionForm["visualBehavior"],
+            overlayTop: o.overlayTop ?? "",
+            overlayLeft: o.overlayLeft ?? "",
+            overlayWidth: o.overlayWidth ?? "",
+            overlayZIndex: o.overlayZIndex != null ? String(o.overlayZIndex) : "",
         };
     }
 
@@ -111,6 +125,12 @@ export default function AdminPackageOptionsPage() {
                 category: form.category,
                 globalPrice: Number(form.globalPrice),
                 sortOrder: Number(form.sortOrder),
+                imageUrl: form.imageUrl || undefined,
+                visualBehavior: (form.visualBehavior || undefined) as VisualBehavior | undefined,
+                overlayTop: form.overlayTop || undefined,
+                overlayLeft: form.overlayLeft || undefined,
+                overlayWidth: form.overlayWidth || undefined,
+                overlayZIndex: form.overlayZIndex ? Number(form.overlayZIndex) : undefined,
             });
             setOptions((prev) => [...prev, created]);
             setCreateOpen(false);
@@ -135,6 +155,12 @@ export default function AdminPackageOptionsPage() {
                 category: editForm.category,
                 globalPrice: Number(editForm.globalPrice),
                 sortOrder: Number(editForm.sortOrder),
+                imageUrl: editForm.imageUrl || undefined,
+                visualBehavior: (editForm.visualBehavior || undefined) as VisualBehavior | undefined,
+                overlayTop: editForm.overlayTop || undefined,
+                overlayLeft: editForm.overlayLeft || undefined,
+                overlayWidth: editForm.overlayWidth || undefined,
+                overlayZIndex: editForm.overlayZIndex ? Number(editForm.overlayZIndex) : undefined,
             });
             setOptions((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
             setEditTarget(null);
@@ -206,6 +232,45 @@ export default function AdminPackageOptionsPage() {
                 <input className="input" type="number" min="0" value={f.sortOrder}
                     onChange={(e) => set({ ...f, sortOrder: e.target.value })} />
             </div>
+            <div className="form-field" style={{ gridColumn: "1 / -1" }}>
+                <label>כתובת תמונה (URL)</label>
+                <input className="input" dir="ltr" placeholder="/images/chuppah.png" value={f.imageUrl}
+                    onChange={(e) => set({ ...f, imageUrl: e.target.value })} />
+            </div>
+            <div className="form-field">
+                <label>התנהגות ויזואלית</label>
+                <select className="input select" value={f.visualBehavior}
+                    onChange={(e) => set({ ...f, visualBehavior: e.target.value as OptionForm["visualBehavior"] })}>
+                    <option value="">— ללא —</option>
+                    <option value="REPLACE_IMAGE">החלפת תמונה</option>
+                    <option value="OVERLAY_IMAGE">שכבת על</option>
+                    <option value="NO_VISUAL">ללא תצוגה</option>
+                </select>
+            </div>
+            {f.visualBehavior === "OVERLAY_IMAGE" && (
+                <>
+                    <div className="form-field">
+                        <label>מיקום שכבת על — top</label>
+                        <input className="input" dir="ltr" placeholder="10%" value={f.overlayTop}
+                            onChange={(e) => set({ ...f, overlayTop: e.target.value })} />
+                    </div>
+                    <div className="form-field">
+                        <label>מיקום שכבת על — left</label>
+                        <input className="input" dir="ltr" placeholder="5%" value={f.overlayLeft}
+                            onChange={(e) => set({ ...f, overlayLeft: e.target.value })} />
+                    </div>
+                    <div className="form-field">
+                        <label>רוחב שכבת על</label>
+                        <input className="input" dir="ltr" placeholder="90%" value={f.overlayWidth}
+                            onChange={(e) => set({ ...f, overlayWidth: e.target.value })} />
+                    </div>
+                    <div className="form-field">
+                        <label>סדר שכבה (z-index)</label>
+                        <input className="input" type="number" min="0" value={f.overlayZIndex}
+                            onChange={(e) => set({ ...f, overlayZIndex: e.target.value })} />
+                    </div>
+                </>
+            )}
         </div>
     );
 

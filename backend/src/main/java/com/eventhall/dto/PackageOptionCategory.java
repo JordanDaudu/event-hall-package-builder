@@ -12,6 +12,7 @@ public enum PackageOptionCategory {
     PHOTOGRAPHY,
     EXTRAS,
     CHUPPAH,
+    CHUPPAH_UPGRADE,
     AISLE,
     TABLE_FRAME,
     TABLE_FLOWER,
