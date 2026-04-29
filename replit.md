@@ -77,6 +77,16 @@ The backend now uses **Spring Security + JWT (HS256)** for authentication.
   - `JWT_EXPIRATION_MINUTES` (default `480`)
   - `JWT_ISSUER` (default `adama-event-hall`)
 
+## Venues (Phase 4 — added)
+
+`Venue` entity with Hebrew/English names, Hebrew description, image URL, active flag, and sort order.
+
+- **Public endpoint**: `GET /api/venues` — returns only active venues, sorted by `sortOrder`. No auth required; venue names/descriptions are not sensitive.
+- **Admin endpoints** (`/api/admin/venues`): list all (including inactive), create, update, toggle active, soft-delete. All require ADMIN role.
+- **Soft-delete convention**: `DELETE /api/admin/venues/{id}` sets `active=false` rather than removing the row. This preserves consistency for future package requests that will reference venues.
+- **Seeder**: Two default venues are created at startup if none exist — "אולם הגן" (Garden Hall) and "אולם הכוכבים" (Stars Hall).
+- `VenueService.requireActiveVenue(id)` is a helper pre-built for Phase 7 (package request submission) to validate venue selection.
+
 ## Key Notes
 
 - Java version set to 19 in pom.xml (Spring Boot 4 supports Java 19+)

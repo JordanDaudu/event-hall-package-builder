@@ -103,6 +103,11 @@ public class SecurityConfig {
                         // Health / actuator-style root
                         .requestMatchers("/", "/error").permitAll()
 
+                        // Public venue listing — venue names/descriptions contain no
+                        // sensitive data; making this endpoint open simplifies the
+                        // customer builder (no need to defer until after login).
+                        .requestMatchers(HttpMethod.GET, "/api/venues").permitAll()
+
                         // Legacy endpoints — kept open during the migration. These will
                         // either be removed or moved under proper role-based protection
                         // as the new domain model lands.
