@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { usePageTitle } from "../../hooks/usePageTitle";
 import {
     listAllPackageOptions,
     createPackageOption,
@@ -56,6 +57,7 @@ const EMPTY_FORM = {
 type OptionForm = typeof EMPTY_FORM;
 
 export default function AdminPackageOptionsPage() {
+    usePageTitle("אפשרויות חבילה");
     const { showToast } = useToast();
     const [options, setOptions] = useState<PackageOptionResponse[]>([]);
     const [loading, setLoading] = useState(true);

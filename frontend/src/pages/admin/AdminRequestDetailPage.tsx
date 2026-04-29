@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { usePageTitle } from "../../hooks/usePageTitle";
 import { getAdminRequestById, updateAdminRequestStatus } from "../../api/adminPackageRequestApi";
 import { useToast } from "../../contexts/ToastContext";
 import { formatILS } from "../../utils/currency";
@@ -39,6 +40,7 @@ function formatDatetime(d: string | null | undefined) {
 }
 
 export default function AdminRequestDetailPage() {
+    usePageTitle("פרטי בקשה");
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { showToast } = useToast();

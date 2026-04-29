@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { usePageTitle } from "../hooks/usePageTitle";
 import adamaLogo from "../assets/logos/adama-logo.jpeg";
 
 export default function LoginPage() {
+    usePageTitle("כניסה לחשבון");
     const { user, loading, login } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");

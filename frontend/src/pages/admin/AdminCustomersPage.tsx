@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { usePageTitle } from "../../hooks/usePageTitle";
 import {
     listCustomers,
     createCustomer,
@@ -29,6 +30,7 @@ const EMPTY_EDIT = {
 };
 
 export default function AdminCustomersPage() {
+    usePageTitle("לקוחות");
     const navigate = useNavigate();
     const { showToast } = useToast();
 

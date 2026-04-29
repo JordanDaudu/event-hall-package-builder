@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { usePageTitle } from "../../hooks/usePageTitle";
 import { useAuth } from "../../contexts/AuthContext";
 import { useBuilderUi } from "../../contexts/BuilderUiContext";
 import { useToast } from "../../contexts/ToastContext";
@@ -677,6 +678,7 @@ function Step6Summary({
 // Main component
 
 export default function CustomerBuilderPage() {
+    usePageTitle("בניית חבילת אירוע");
     const { user } = useAuth();
     const { showToast } = useToast();
     const { setCurrentStep, setRunningTotal, setBuilderActive } = useBuilderUi();

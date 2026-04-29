@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { usePageTitle } from "../../hooks/usePageTitle";
 import {
     listAllVenues,
     createVenue,
@@ -22,6 +23,7 @@ const EMPTY_FORM = {
 type VenueForm = typeof EMPTY_FORM;
 
 export default function AdminVenuesPage() {
+    usePageTitle("אולמות");
     const { showToast } = useToast();
     const [venues, setVenues] = useState<VenueResponse[]>([]);
     const [loading, setLoading] = useState(true);

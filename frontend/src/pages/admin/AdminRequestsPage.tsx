@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { usePageTitle } from "../../hooks/usePageTitle";
 import { listAdminRequests } from "../../api/adminPackageRequestApi";
 import { useToast } from "../../contexts/ToastContext";
 import { formatILS } from "../../utils/currency";
@@ -35,6 +36,7 @@ function formatDate(d: string) {
 }
 
 export default function AdminRequestsPage() {
+    usePageTitle("בקשות חבילה");
     const { showToast } = useToast();
     const navigate = useNavigate();
 

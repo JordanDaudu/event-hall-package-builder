@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { listOwnRequests } from "../../api/packageRequestApi";
+import { usePageTitle } from "../../hooks/usePageTitle";
 import { useToast } from "../../contexts/ToastContext";
 import type { PackageRequestSummaryResponse } from "../../types/api";
 
@@ -24,6 +25,7 @@ function formatDate(d: string) {
 }
 
 export default function CustomerMyRequestsPage() {
+    usePageTitle("הבקשות שלי");
     const { showToast } = useToast();
     const [requests, setRequests] = useState<PackageRequestSummaryResponse[]>([]);
     const [loading, setLoading] = useState(true);
