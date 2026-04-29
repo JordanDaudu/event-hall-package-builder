@@ -459,6 +459,7 @@ function Step3Tables({
     subs,
     setSubs,
     effectivePrice,
+    venueImageUrl,
 }: {
     frameOpts: PackageOptionResponse[];
     flowerOpts: PackageOptionResponse[];
@@ -468,7 +469,16 @@ function Step3Tables({
     subs: TableSubSelections;
     setSubs: (s: TableSubSelections) => void;
     effectivePrice: (opt: PackageOptionResponse) => number;
+    venueImageUrl?: string | null;
 }) {
+    const [hoveredId, setHoveredId] = useState<number | null>(null);
+    const allTableOpts = useMemo(() => [...frameOpts, ...flowerOpts, ...candleOpts], [frameOpts, flowerOpts, candleOpts]);
+    const hoveredOpt = hoveredId !== null ? (allTableOpts.find((o) => o.id === hoveredId) ?? null) : null;
+    const selectedFrameOpt = frameOpts.find((o) => o.id === subs.frameId) ?? null;
+    const selectedFlowerOpt = flowerOpts.find((o) => o.id === subs.primaryFlowerId) ?? null;
+    const selectedCandleOpt = candleOpts.find((o) => o.id === subs.candleOptionId) ?? null;
+    const fallbackSelected = selectedFrameOpt ?? selectedFlowerOpt ?? selectedCandleOpt;
+    const previewOpt = hoveredOpt ?? fallbackSelected;
 
     function update<K extends keyof TableSubSelections>(key: K, val: TableSubSelections[K]) {
         setSubs({ ...subs, [key]: val });
@@ -481,6 +491,10 @@ function Step3Tables({
                 <h2>שולחנות</h2>
                 <p>בחרו מספר שולחנות אבירים ואת עיצוב השולחנות.</p>
             </div>
+
+            {knightTableCount > 0 && (
+                <OptionPreview selected={previewOpt} venueImageUrl={venueImageUrl} />
+            )}
 
             <div className="card">
                 <h3 style={{ marginBottom: "14px" }}>שולחנות אבירים</h3>
@@ -515,6 +529,7 @@ function Step3Tables({
                                 selectedId={subs.frameId}
                                 onSelect={(id) => update("frameId", subs.frameId === id ? null : id)}
                                 effectivePrice={effectivePrice}
+                                onHover={setHoveredId}
                             />
                         </div>
                     )}
@@ -531,6 +546,7 @@ function Step3Tables({
                                     setSubs({ ...subs, primaryFlowerId: newId, secondaryFlowerId: null });
                                 }}
                                 effectivePrice={effectivePrice}
+                                onHover={setHoveredId}
                             />
                         </div>
                     )}
@@ -548,6 +564,7 @@ function Step3Tables({
                                 onSelect={(id) => update("secondaryFlowerId", subs.secondaryFlowerId === id ? null : id)}
                                 effectivePrice={effectivePrice}
                                 disabledIds={subs.primaryFlowerId ? [subs.primaryFlowerId] : []}
+                                onHover={setHoveredId}
                             />
                         </div>
                     )}
@@ -603,6 +620,7 @@ function Step3Tables({
                                     selectedId={subs.candleOptionId}
                                     onSelect={(id) => update("candleOptionId", subs.candleOptionId === id ? null : id)}
                                     effectivePrice={effectivePrice}
+                                    onHover={setHoveredId}
                                 />
                             </div>
                         )}
@@ -623,6 +641,7 @@ function Step4NapkinsTablecloths({
     tableclothId,
     setTableclothId,
     effectivePrice,
+    venueImageUrl,
 }: {
     napkinOpts: PackageOptionResponse[];
     tableclothOpts: PackageOptionResponse[];
@@ -631,7 +650,15 @@ function Step4NapkinsTablecloths({
     tableclothId: number | null;
     setTableclothId: (id: number | null) => void;
     effectivePrice: (opt: PackageOptionResponse) => number;
+    venueImageUrl?: string | null;
 }) {
+    const [hoveredId, setHoveredId] = useState<number | null>(null);
+    const allOpts = useMemo(() => [...napkinOpts, ...tableclothOpts], [napkinOpts, tableclothOpts]);
+    const hoveredOpt = hoveredId !== null ? (allOpts.find((o) => o.id === hoveredId) ?? null) : null;
+    const selectedNapkinOpt = napkinOpts.find((o) => o.id === napkinId) ?? null;
+    const selectedTableclothOpt = tableclothOpts.find((o) => o.id === tableclothId) ?? null;
+    const fallbackSelected = selectedNapkinOpt ?? selectedTableclothOpt;
+    const previewOpt = hoveredOpt ?? fallbackSelected;
 
     return (
         <div className="builder-step">
@@ -640,6 +667,8 @@ function Step4NapkinsTablecloths({
                 <h2>מפיות ומפות</h2>
                 <p>בחרו מפית ומפה לשולחנות האירוע.</p>
             </div>
+
+            <OptionPreview selected={previewOpt} venueImageUrl={venueImageUrl} />
 
             <div className="card">
                 <h3 style={{ marginBottom: "14px" }}>מפית</h3>
@@ -651,6 +680,7 @@ function Step4NapkinsTablecloths({
                     selectedId={napkinId}
                     onSelect={(id) => setNapkinId(napkinId === id ? null : id)}
                     effectivePrice={effectivePrice}
+                    onHover={setHoveredId}
                 />
             </div>
 
@@ -668,6 +698,7 @@ function Step4NapkinsTablecloths({
                     selectedId={tableclothId}
                     onSelect={(id) => napkinId && setTableclothId(tableclothId === id ? null : id)}
                     effectivePrice={effectivePrice}
+                    onHover={setHoveredId}
                 />
             </div>
         </div>
@@ -681,12 +712,19 @@ function Step5BrideChair({
     selectedId,
     onSelect,
     effectivePrice,
+    venueImageUrl,
 }: {
     options: PackageOptionResponse[];
     selectedId: number | null;
     onSelect: (id: number) => void;
     effectivePrice: (opt: PackageOptionResponse) => number;
+    venueImageUrl?: string | null;
 }) {
+    const [hoveredId, setHoveredId] = useState<number | null>(null);
+    const hoveredOpt = hoveredId !== null ? (options.find((o) => o.id === hoveredId) ?? null) : null;
+    const selectedOpt = options.find((o) => o.id === selectedId) ?? null;
+    const previewOpt = hoveredOpt ?? selectedOpt;
+
     return (
         <div className="builder-step">
             <div className="builder-step-header">
@@ -694,12 +732,14 @@ function Step5BrideChair({
                 <h2>כיסא כלה</h2>
                 <p>בחרו את עיצוב כיסא הכלה.</p>
             </div>
+            <OptionPreview selected={previewOpt} venueImageUrl={venueImageUrl} />
             <div className="card">
                 <OptionGrid
                     options={options}
                     selectedId={selectedId}
                     onSelect={onSelect}
                     effectivePrice={effectivePrice}
+                    onHover={setHoveredId}
                 />
             </div>
         </div>
@@ -1115,6 +1155,7 @@ export default function CustomerBuilderPage() {
                         subs={tableSubs}
                         setSubs={setTableSubs}
                         effectivePrice={effectivePrice}
+                        venueImageUrl={selectedVenueImageUrl}
                     />
                 );
             case 4:
@@ -1127,6 +1168,7 @@ export default function CustomerBuilderPage() {
                         tableclothId={tableclothId}
                         setTableclothId={setTableclothId}
                         effectivePrice={effectivePrice}
+                        venueImageUrl={selectedVenueImageUrl}
                     />
                 );
             case 5:
@@ -1136,6 +1178,7 @@ export default function CustomerBuilderPage() {
                         selectedId={brideChairId}
                         onSelect={(id) => setBrideChairId(brideChairId === id ? null : id)}
                         effectivePrice={effectivePrice}
+                        venueImageUrl={selectedVenueImageUrl}
                     />
                 );
             case 6:
