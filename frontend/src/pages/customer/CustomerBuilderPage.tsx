@@ -791,6 +791,7 @@ function Step6Summary({
     onSubmit: () => void;
 }) {
     const venue = venues.find((v) => v.id === eventDetails.venueId);
+    const displayedBasePrice = Number.isFinite(basePackagePrice) && basePackagePrice > 0 ? basePackagePrice : 0;
     return (
         <div className="builder-step">
             <div className="builder-step-header">
@@ -844,7 +845,7 @@ function Step6Summary({
             <div className="card summary-total-card">
                 <div className="summary-price-row">
                     <span>חבילה בסיסית</span>
-                    <span>{formatILS(basePackagePrice)}</span>
+                    <span>{formatILS(displayedBasePrice)}</span>
                 </div>
                 {selectedOptions.map((opt) => (
                     <div key={opt.id} className="summary-price-row summary-price-row-sub">
