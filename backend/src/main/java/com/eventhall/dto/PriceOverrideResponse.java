@@ -21,7 +21,7 @@ public record PriceOverrideResponse(
         return new PriceOverrideResponse(
                 o.getId(),
                 o.getCustomer().getId(),
-                o.getOptionId(),
+                o.getPackageOptionId(),
                 o.getCustomPrice(),
                 o.getCreatedAt(),
                 o.getUpdatedAt()

@@ -1,5 +1,6 @@
 package com.eventhall.service;
 
+import com.eventhall.entity.PackageOption;
 import com.eventhall.repository.CustomerOptionPriceOverrideRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,12 +12,12 @@ import java.math.BigDecimal;
  * for a given customer.
  *
  * Resolution rule:
- *   1. If a CustomerOptionPriceOverride exists for (customerId, optionId), return its customPrice.
- *   2. Otherwise, return the globalPrice passed in by the caller.
+ *   1. If a CustomerOptionPriceOverride exists for (customerId, option.id), return its customPrice.
+ *   2. Otherwise, return option.globalPrice.
  *
- * This service is intentionally thin — it contains only the look-up logic
- * and does not know about the full package or quote domain. It will be
- * consumed by the package-request flow in Phase 7.
+ * The method accepts a PackageOption entity directly so that Phase 7 (package
+ * request submission) can pass the already-loaded entity without repeating the
+ * look-up or passing the global price as a separate argument.
  */
 @Service
 @Transactional(readOnly = true)
@@ -29,17 +30,17 @@ public class PricingLookupService {
     }
 
     /**
-     * Returns the effective price for the given customer and option.
+     * Returns the effective price for the given customer and package option.
      *
-     * @param customerId  internal id of the CUSTOMER UserAccount
-     * @param optionId    id of the PackageOption (forward reference to Phase 6)
-     * @param globalPrice the price defined on the PackageOption itself
-     * @return customPrice if an override exists, otherwise globalPrice
+     * @param customerId internal id of the CUSTOMER UserAccount
+     * @param option     the PackageOption whose price is being resolved
+     * @return customPrice from a CustomerOptionPriceOverride if one exists,
+     *         otherwise option.getGlobalPrice()
      */
-    public BigDecimal resolvePrice(Long customerId, Long optionId, BigDecimal globalPrice) {
+    public BigDecimal resolvePrice(Long customerId, PackageOption option) {
         return overrideRepository
-                .findByCustomerIdAndOptionId(customerId, optionId)
+                .findByCustomerIdAndPackageOption_Id(customerId, option.getId())
                 .map(override -> override.getCustomPrice())
-                .orElse(globalPrice);
+                .orElse(option.getGlobalPrice());
     }
 }

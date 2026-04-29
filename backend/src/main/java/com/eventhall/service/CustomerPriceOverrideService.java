@@ -3,9 +3,11 @@ package com.eventhall.service;
 import com.eventhall.dto.PriceOverrideRequest;
 import com.eventhall.dto.PriceOverrideResponse;
 import com.eventhall.entity.CustomerOptionPriceOverride;
+import com.eventhall.entity.PackageOption;
 import com.eventhall.entity.UserAccount;
 import com.eventhall.enums.UserRole;
 import com.eventhall.repository.CustomerOptionPriceOverrideRepository;
+import com.eventhall.repository.PackageOptionRepository;
 import com.eventhall.repository.UserAccountRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -19,9 +21,9 @@ import java.util.List;
  *
  * Rules enforced:
  * - The target user must exist and have the CUSTOMER role.
- * - Only one override per (customer, option) pair is allowed (enforced by DB unique constraint
- *   and checked here to give a friendly 409 instead of a raw DB error).
- * - SET is upsert-style: create if absent, update customPrice if present.
+ * - The referenced PackageOption must exist (real FK enforced at DB level too).
+ * - Only one override per (customer, option) pair is allowed (DB unique constraint
+ *   + upsert semantics in setOverride to avoid 409 on repeat POST).
  */
 @Service
 @Transactional
@@ -29,13 +31,16 @@ public class CustomerPriceOverrideService {
 
     private final CustomerOptionPriceOverrideRepository overrideRepository;
     private final UserAccountRepository userAccountRepository;
+    private final PackageOptionRepository packageOptionRepository;
 
     public CustomerPriceOverrideService(
             CustomerOptionPriceOverrideRepository overrideRepository,
-            UserAccountRepository userAccountRepository
+            UserAccountRepository userAccountRepository,
+            PackageOptionRepository packageOptionRepository
     ) {
         this.overrideRepository = overrideRepository;
         this.userAccountRepository = userAccountRepository;
+        this.packageOptionRepository = packageOptionRepository;
     }
 
     // -----------------------------------------------------------------------
@@ -46,7 +51,7 @@ public class CustomerPriceOverrideService {
     public List<PriceOverrideResponse> listOverrides(Long customerId) {
         requireCustomer(customerId);
         return overrideRepository
-                .findAllByCustomerIdOrderByOptionId(customerId)
+                .findAllByCustomerIdOrderByPackageOption_IdAsc(customerId)
                 .stream()
                 .map(PriceOverrideResponse::from)
                 .toList();
@@ -58,12 +63,13 @@ public class CustomerPriceOverrideService {
 
     public PriceOverrideResponse setOverride(Long customerId, PriceOverrideRequest req) {
         UserAccount customer = requireCustomer(customerId);
+        PackageOption option = requirePackageOption(req.optionId());
 
         CustomerOptionPriceOverride override = overrideRepository
-                .findByCustomerIdAndOptionId(customerId, req.optionId())
+                .findByCustomerIdAndPackageOption_Id(customerId, req.optionId())
                 .orElseGet(() -> CustomerOptionPriceOverride.builder()
                         .customer(customer)
-                        .optionId(req.optionId())
+                        .packageOption(option)
                         .build());
 
         override.setCustomPrice(req.customPrice());
@@ -76,7 +82,8 @@ public class CustomerPriceOverrideService {
 
     public void deleteOverride(Long customerId, Long optionId) {
         requireCustomer(customerId);
-        long deleted = overrideRepository.deleteByCustomerIdAndOptionId(customerId, optionId);
+        long deleted = overrideRepository.deleteByCustomerIdAndPackageOptionId(customerId, optionId);
+
         if (deleted == 0) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "לא נמצא מחיר מיוחד עבור לקוח ואפשרות אלה");
@@ -96,5 +103,11 @@ public class CustomerPriceOverrideService {
                     "משתמש זה אינו לקוח");
         }
         return user;
+    }
+
+    private PackageOption requirePackageOption(Long optionId) {
+        return packageOptionRepository.findById(optionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "אפשרות חבילה לא נמצאה"));
     }
 }

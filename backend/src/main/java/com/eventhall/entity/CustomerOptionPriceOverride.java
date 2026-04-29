@@ -2,6 +2,8 @@ package com.eventhall.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -12,10 +14,9 @@ import java.time.Instant;
  * When no override exists for a (customer, option) pair, the global price
  * defined on the PackageOption itself is used instead.
  *
- * optionId is a forward reference to the package_options table which will
- * be created in Phase 6. Until then it is stored as a plain Long column
- * (no FK constraint) so that the override infrastructure can be put in
- * place independently.
+ * The option_id column carries a real FK constraint referencing
+ * package_options(id) with ON DELETE CASCADE, so that removing a package
+ * option automatically removes all customer overrides for that option.
  */
 @Entity
 @Table(
@@ -47,11 +48,21 @@ public class CustomerOptionPriceOverride {
     private UserAccount customer;
 
     /**
-     * Forward reference to the package_options table (Phase 6).
-     * Stored as a plain Long (no FK constraint) until that table exists.
+     * The package option this override applies to.
+     *
+     * @JoinColumn(name = "option_id") reuses the existing column so
+     * Hibernate's ddl-auto=update only needs to add the FK constraint
+     * rather than create a new column.
+     *
+     * @OnDelete(CASCADE) delegates cascade to the database so that
+     * deleting a PackageOption automatically removes all its overrides
+     * without requiring JPA to load them first.
      */
-    @Column(name = "option_id", nullable = false)
-    private Long optionId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "option_id", nullable = false,
+            foreignKey = @ForeignKey(name = "fk_cop_override_option"))
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private PackageOption packageOption;
 
     /**
      * The custom price that overrides the global package option price for this customer.
@@ -64,6 +75,11 @@ public class CustomerOptionPriceOverride {
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    /** Convenience accessor — avoids loading the full entity in response mappers. */
+    public Long getPackageOptionId() {
+        return packageOption != null ? packageOption.getId() : null;
+    }
 
     @PrePersist
     void onCreate() {
