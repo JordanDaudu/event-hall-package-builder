@@ -17,6 +17,23 @@ import java.time.Instant;
  * The option_id column carries a real FK constraint referencing
  * package_options(id) with ON DELETE CASCADE, so that removing a package
  * option automatically removes all customer overrides for that option.
+ *
+ * === Migration note ===
+ * Phase 5 stored optionId as a plain Long with no FK. Task #4 upgraded it to a
+ * real @ManyToOne. This change is safe only if all existing option_id values
+ * reference rows that exist in package_options.
+ *
+ * In this project's dev environment the table was empty when the FK was added
+ * (verified: 0 rows in customer_option_price_overrides at migration time).
+ *
+ * For future production rollouts: run the following pre-flight check before
+ * deploying, and delete or reconcile any orphan rows first:
+ *
+ *   SELECT o.id, o.option_id
+ *   FROM customer_option_price_overrides o
+ *   WHERE NOT EXISTS (
+ *     SELECT 1 FROM package_options p WHERE p.id = o.option_id
+ *   );
  */
 @Entity
 @Table(
