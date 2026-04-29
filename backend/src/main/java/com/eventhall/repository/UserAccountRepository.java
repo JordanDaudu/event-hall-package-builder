@@ -5,6 +5,7 @@ import com.eventhall.enums.UserRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -14,7 +15,13 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
 
     boolean existsByEmailIgnoreCase(String email);
 
+    boolean existsByEmailIgnoreCaseAndIdNot(String email, Long id);
+
     boolean existsByRole(UserRole role);
 
     boolean existsByCustomerIdentityNumber(String customerIdentityNumber);
+
+    boolean existsByCustomerIdentityNumberAndIdNot(String customerIdentityNumber, Long excludeId);
+
+    List<UserAccount> findAllByRoleOrderByCreatedAtDesc(UserRole role);
 }
