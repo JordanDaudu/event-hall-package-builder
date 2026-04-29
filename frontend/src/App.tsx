@@ -1,51 +1,63 @@
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
-import HomePage from "./pages/HomePage";
-import PackageBuilderPage from "./pages/PackageBuilderPage";
-import QuoteSummaryPage from "./pages/QuoteSummaryPage";
-import AdminQuotesPage from "./pages/AdminQuotesPage";
-import AdminUpgradesPage from "./pages/AdminUpgradesPage";
-import AdminDashboardPage from "./pages/AdminDashboardPage";
-import adamaLogo from "./assets/logos/adama-logo.jpeg";
-import jdLogo from "./assets/logos/jd-logo.png";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AdminLayout from "./layouts/AdminLayout";
+import CustomerLayout from "./layouts/CustomerLayout";
+import LoginPage from "./pages/LoginPage";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminCustomersPage from "./pages/admin/AdminCustomersPage";
+import AdminVenuesPage from "./pages/admin/AdminVenuesPage";
+import AdminPackageOptionsPage from "./pages/admin/AdminPackageOptionsPage";
+import AdminRequestsPage from "./pages/admin/AdminRequestsPage";
+import CustomerBuilderPage from "./pages/customer/CustomerBuilderPage";
+
+function RootRedirect() {
+    return <Navigate to="/login" replace />;
+}
 
 function App() {
     return (
         <BrowserRouter>
-            <nav className="navbar">
-                <div className="navbar-inner">
-                    <Link to="/" className="navbar-brand" aria-label="Adama">
-                        <img src={adamaLogo} alt="Adama" />
-                    </Link>
-                    <div className="navbar-links">
-                        <Link to="/">Home</Link>
-                        <Link to="/builder">Package Builder</Link>
-                        <Link to="/admin/quotes">Quotes</Link>
-                        <Link to="/admin/upgrades">Upgrades</Link>
-                        <Link to="/admin/dashboard">Dashboard</Link>
-                    </div>
-                </div>
-            </nav>
+            <AuthProvider>
+                <Routes>
+                    {/* Public */}
+                    <Route path="/login" element={<LoginPage />} />
 
-            <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/builder" element={<PackageBuilderPage />} />
-                <Route path="/quote/:id" element={<QuoteSummaryPage />} />
-                <Route path="/admin/quotes" element={<AdminQuotesPage />} />
-                <Route path="/admin/upgrades" element={<AdminUpgradesPage />} />
-                <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-            </Routes>
+                    {/* Root — redirect to login (AuthContext will redirect further if logged in) */}
+                    <Route path="/" element={<RootRedirect />} />
 
-            <footer className="footer">
-                <div className="footer-inner">
-                    <div className="footer-copy">
-                        © {new Date().getFullYear()} Adama. All rights reserved.
-                    </div>
-                    <div className="footer-credit" title="Crafted by JD">
-                        <img src={jdLogo} alt="JD" />
-                        <span>Crafted by JD</span>
-                    </div>
-                </div>
-            </footer>
+                    {/* Admin area */}
+                    <Route
+                        path="/admin"
+                        element={
+                            <ProtectedRoute requiredRole="ADMIN">
+                                <AdminLayout />
+                            </ProtectedRoute>
+                        }
+                    >
+                        <Route index element={<AdminDashboard />} />
+                        <Route path="customers" element={<AdminCustomersPage />} />
+                        <Route path="venues" element={<AdminVenuesPage />} />
+                        <Route path="package-options" element={<AdminPackageOptionsPage />} />
+                        <Route path="requests" element={<AdminRequestsPage />} />
+                    </Route>
+
+                    {/* Customer area */}
+                    <Route
+                        path="/customer"
+                        element={
+                            <ProtectedRoute requiredRole="CUSTOMER">
+                                <CustomerLayout />
+                            </ProtectedRoute>
+                        }
+                    >
+                        <Route index element={<CustomerBuilderPage />} />
+                    </Route>
+
+                    {/* Fallback */}
+                    <Route path="*" element={<Navigate to="/login" replace />} />
+                </Routes>
+            </AuthProvider>
         </BrowserRouter>
     );
 }
