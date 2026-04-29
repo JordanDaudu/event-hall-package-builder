@@ -52,9 +52,34 @@ The frontend Vite dev server proxies all `/api/*` requests to `http://localhost:
 - **JD logo** (developer) — small footer credit ("Crafted by JD"), dark-mode variant: `frontend/src/assets/logos/jd-logo.png`
 - **Design system** — elegant warm-cream/charcoal palette, Cormorant Garamond serif headings + Inter body, defined via CSS variables in `frontend/src/styles/global.css`.
 
+## Authentication (Phase 2 — added)
+
+The backend now uses **Spring Security + JWT (HS256)** for authentication.
+
+- **Roles**: `ADMIN`, `CUSTOMER` (no public registration; admin creates customers).
+- **Entity**: `UserAccount` (full name, email, BCrypt password hash, role, active flag, customer identity number, base package price).
+- **Endpoints**: `POST /api/auth/login`, `GET /api/auth/me` (returns current user without password hash).
+- **Filter**: `JwtAuthenticationFilter` reads `Authorization: Bearer <token>` and populates the security context.
+- **Stateless** session, CSRF disabled (REST only), CORS handled centrally in `SecurityConfig`.
+- **Authorization map** (current):
+  - `POST /api/auth/login` → public
+  - `/api/auth/**` → authenticated
+  - `/api/admin/**` → `ROLE_ADMIN`
+  - `/api/customer/**` → `ROLE_CUSTOMER`
+  - Legacy public endpoints (`/api/event-types`, `/api/upgrades`, `/api/quotes`, `/api/config`) remain `permitAll` during the migration; they will be moved or removed as the new domain lands.
+  - Swagger UI / OpenAPI remain open for development.
+- **Default admin** is seeded at startup if none exists. Override with env vars:
+  - `ADMIN_EMAIL` (default `admin@adama.local`)
+  - `ADMIN_PASSWORD` (default `admin1234` — dev only)
+  - `ADMIN_FULL_NAME` (default `מנהל המערכת`)
+- **JWT settings** (env vars):
+  - `JWT_SECRET` (must be ≥ 32 bytes / 256 bits for HS256; dev default included in `application.properties`)
+  - `JWT_EXPIRATION_MINUTES` (default `480`)
+  - `JWT_ISSUER` (default `adama-event-hall`)
+
 ## Key Notes
 
 - Java version set to 19 in pom.xml (Spring Boot 4 supports Java 19+)
-- CORS configured to allow all origins (`allowedOriginPatterns("*")`)
-- Database schema auto-created by Hibernate on startup with seed data (event types and upgrades)
+- CORS configured centrally in `SecurityConfig#corsConfigurationSource` (allows all origins; tighten for production)
+- Database schema auto-created by Hibernate on startup; default admin user seeded if no admin exists
 - Swagger UI available at `/swagger-ui.html` on the backend (port 8080)
