@@ -32,7 +32,7 @@ public record SubmitRequestRequest(
         String eventContactPhoneNumber,
 
         @NotNull(message = "תאריך האירוע הוא שדה חובה")
-        @Future(message = "תאריך האירוע חייב להיות בעתיד")
+        @FutureOrPresent(message = "תאריך האירוע לא יכול להיות בעבר")
         LocalDate eventDate,
 
         @Min(value = 0, message = "מספר שולחנות הפרשים חייב להיות 0 לפחות")

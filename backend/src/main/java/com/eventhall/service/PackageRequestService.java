@@ -34,6 +34,7 @@ public class PackageRequestService {
     private final UserAccountRepository userAccountRepository;
     private final PackageOptionRepository packageOptionRepository;
     private final CustomerOptionPriceOverrideRepository overrideRepository;
+    private final PricingLookupService pricingLookupService;
     private final VenueService venueService;
 
     public PackageRequestService(
@@ -42,6 +43,7 @@ public class PackageRequestService {
             UserAccountRepository userAccountRepository,
             PackageOptionRepository packageOptionRepository,
             CustomerOptionPriceOverrideRepository overrideRepository,
+            PricingLookupService pricingLookupService,
             VenueService venueService
     ) {
         this.requestRepository = requestRepository;
@@ -49,6 +51,7 @@ public class PackageRequestService {
         this.userAccountRepository = userAccountRepository;
         this.packageOptionRepository = packageOptionRepository;
         this.overrideRepository = overrideRepository;
+        this.pricingLookupService = pricingLookupService;
         this.venueService = venueService;
     }
 
@@ -82,15 +85,17 @@ public class PackageRequestService {
                         "אפשרות החבילה \"" + option.getNameHe() + "\" אינה זמינה כרגע");
             }
 
-            // Resolve override snapshot
+            BigDecimal globalPrice = option.getGlobalPrice();
+
+            // Snapshot the customer override (null if none) — stored for audit trail.
+            // Final price is always resolved through the dedicated pricing service so
+            // any future changes to the pricing rule stay in one place.
             var maybeOverride = overrideRepository
                     .findByCustomerIdAndPackageOption_Id(customer.getId(), optionId);
-
-            BigDecimal globalPrice = option.getGlobalPrice();
             BigDecimal overridePrice = maybeOverride
                     .map(o -> o.getCustomPrice())
                     .orElse(null);
-            BigDecimal finalPrice = overridePrice != null ? overridePrice : globalPrice;
+            BigDecimal finalPrice = pricingLookupService.resolvePrice(customer.getId(), option);
 
             optionTotal = optionTotal.add(finalPrice);
 
