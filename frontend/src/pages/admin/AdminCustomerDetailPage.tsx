@@ -4,6 +4,7 @@ import { getCustomer } from "../../api/adminCustomerApi";
 import { listPriceOverrides, setPriceOverride, deletePriceOverride } from "../../api/adminPriceOverrideApi";
 import { listAllPackageOptions } from "../../api/adminPackageOptionApi";
 import { useToast } from "../../contexts/ToastContext";
+import Modal from "../../components/Modal";
 import ConfirmDeleteDialog from "../../components/ConfirmDeleteDialog";
 import { formatILS } from "../../utils/currency";
 import type { CustomerResponse, PriceOverrideResponse, PackageOptionResponse } from "../../types/api";
@@ -22,6 +23,10 @@ export default function AdminCustomerDetailPage() {
     const [addOptionId, setAddOptionId] = useState<string>("");
     const [addPrice, setAddPrice] = useState<string>("");
     const [adding, setAdding] = useState(false);
+
+    const [editOverride, setEditOverride] = useState<PriceOverrideResponse | null>(null);
+    const [editPrice, setEditPrice] = useState<string>("");
+    const [savingEdit, setSavingEdit] = useState(false);
 
     const [deleteOverride, setDeleteOverride] = useState<PriceOverrideResponse | null>(null);
     const [deleting, setDeleting] = useState(false);
@@ -71,6 +76,29 @@ export default function AdminCustomerDetailPage() {
             showToast(e?.response?.data?.error ?? "שגיאה בהוספת המחיר המיוחד", "error");
         } finally {
             setAdding(false);
+        }
+    }
+
+    async function handleEditOverride(e: FormEvent) {
+        e.preventDefault();
+        if (!editOverride) return;
+        setSavingEdit(true);
+        try {
+            const saved = await setPriceOverride(customerId, {
+                optionId: editOverride.optionId,
+                customPrice: Number(editPrice),
+            });
+            setOverrides((prev) =>
+                prev.map((r) => (r.optionId === saved.optionId ? saved : r))
+            );
+            setEditOverride(null);
+            setEditPrice("");
+            showToast("המחיר המיוחד עודכן בהצלחה");
+        } catch (err: unknown) {
+            const e = err as { response?: { data?: { error?: string } } };
+            showToast(e?.response?.data?.error ?? "שגיאה בעדכון המחיר המיוחד", "error");
+        } finally {
+            setSavingEdit(false);
         }
     }
 
@@ -173,12 +201,23 @@ export default function AdminCustomerDetailPage() {
                                         <td className="muted">{opt ? formatILS(opt.globalPrice) : "—"}</td>
                                         <td><strong>{formatILS(r.customPrice)}</strong></td>
                                         <td>
-                                            <button
-                                                className="btn-table btn-danger"
-                                                onClick={() => setDeleteOverride(r)}
-                                            >
-                                                מחיקה
-                                            </button>
+                                            <div className="action-row">
+                                                <button
+                                                    className="btn-table"
+                                                    onClick={() => {
+                                                        setEditOverride(r);
+                                                        setEditPrice(String(r.customPrice));
+                                                    }}
+                                                >
+                                                    עריכה
+                                                </button>
+                                                <button
+                                                    className="btn-table btn-danger"
+                                                    onClick={() => setDeleteOverride(r)}
+                                                >
+                                                    מחיקה
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 );
@@ -218,6 +257,40 @@ export default function AdminCustomerDetailPage() {
                     </form>
                 )}
             </div>
+
+            {/* Edit override modal */}
+            <Modal
+                open={!!editOverride}
+                title={`עריכת מחיר — ${editOverride ? (optionMap[editOverride.optionId]?.nameHe ?? `אפשרות #${editOverride?.optionId}`) : ""}`}
+                onClose={() => setEditOverride(null)}
+                width={420}
+            >
+                <form onSubmit={handleEditOverride}>
+                    <div className="form-field">
+                        <label>מחיר גלובלי</label>
+                        <p className="muted" style={{ margin: "0 0 16px" }}>
+                            {editOverride ? formatILS(optionMap[editOverride.optionId]?.globalPrice ?? 0) : "—"}
+                        </p>
+                        <label>מחיר מותאם חדש (₪) *</label>
+                        <input
+                            className="input"
+                            type="number"
+                            min="0"
+                            required
+                            value={editPrice}
+                            onChange={(e) => setEditPrice(e.target.value)}
+                        />
+                    </div>
+                    <div className="modal-actions">
+                        <button type="button" className="button button-secondary" onClick={() => setEditOverride(null)}>
+                            ביטול
+                        </button>
+                        <button type="submit" className="button" disabled={savingEdit}>
+                            {savingEdit ? "שומר..." : "שמירה"}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
 
             <ConfirmDeleteDialog
                 open={!!deleteOverride}
