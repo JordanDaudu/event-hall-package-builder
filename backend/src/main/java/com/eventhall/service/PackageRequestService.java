@@ -133,33 +133,43 @@ public class PackageRequestService {
             optionTotal = optionTotal.add(snapshotItem(customer, aisle, items));
         }
 
-        // ── 4. Validate and snapshot remaining options ──────────────────────
-        List<Long> otherOptionIds = req.safeOptionIds();
-        long distinctOther = otherOptionIds.stream().distinct().count();
-        if (distinctOther != otherOptionIds.size()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "רשימת האפשרויות מכילה כפילויות. כל אפשרות יכולה להופיע פעם אחת בלבד");
-        }
-        // Guard against chuppah/upgrade being passed again in optionIds
-        for (Long optId : otherOptionIds) {
-            if (optId.equals(req.chuppahOptionId()) || upgradeIds.contains(optId)
-                    || (req.aisleOptionId() != null && optId.equals(req.aisleOptionId()))) {
+        // ── 4. Validate and snapshot regular table design (always required) ──
+        optionTotal = optionTotal.add(
+                validateAndSnapshotTableDesign(customer, req.regularTableDesign(), "REGULAR", items));
+
+        // ── 5. Validate knight table count and design ────────────────────────
+        int knightCount = req.safeKnightCount();
+        if (knightCount > 0) {
+            if (req.knightTableDesign() == null) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "אפשרות " + optId + " כבר נכללת בחלקים אחרים של הבקשה");
+                        "עיצוב שולחן אביר הוא שדה חובה כאשר מספר שולחנות האבירים גדול מ-0");
             }
-        }
-        for (Long optionId : otherOptionIds) {
-            PackageOption option = packageOptionRepository.findById(optionId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                            "אפשרות חבילה לא נמצאה: " + optionId));
-            if (!option.isActive()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "אפשרות החבילה \"" + option.getNameHe() + "\" אינה זמינה כרגע");
-            }
-            optionTotal = optionTotal.add(snapshotItem(customer, option, items));
+            optionTotal = optionTotal.add(
+                    validateAndSnapshotTableDesign(customer, req.knightTableDesign(), "KNIGHT", items));
         }
 
-        // ── 5. Total ────────────────────────────────────────────────────────
+        // ── 6. Napkin (optional) ─────────────────────────────────────────────
+        if (req.napkinOptionId() != null) {
+            PackageOption napkin = requireActiveOptionByCategory(
+                    req.napkinOptionId(), PackageOptionCategory.NAPKIN);
+            optionTotal = optionTotal.add(snapshotItemWithContext(customer, napkin, null, items));
+        }
+
+        // ── 7. Tablecloth (optional) ─────────────────────────────────────────
+        if (req.tableclothOptionId() != null) {
+            PackageOption tablecloth = requireActiveOptionByCategory(
+                    req.tableclothOptionId(), PackageOptionCategory.TABLECLOTH);
+            optionTotal = optionTotal.add(snapshotItemWithContext(customer, tablecloth, null, items));
+        }
+
+        // ── 8. Bride chair (optional) ────────────────────────────────────────
+        if (req.brideChairOptionId() != null) {
+            PackageOption brideChair = requireActiveOptionByCategory(
+                    req.brideChairOptionId(), PackageOptionCategory.BRIDE_CHAIR);
+            optionTotal = optionTotal.add(snapshotItemWithContext(customer, brideChair, null, items));
+        }
+
+        // ── 9. Total ────────────────────────────────────────────────────────
         BigDecimal basePrice = customer.getBasePackagePrice();
         if (basePrice == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -178,7 +188,7 @@ public class PackageRequestService {
                 .venueNameSnapshot(venue.getNameHe())
                 .basePackagePriceSnapshot(basePrice)
                 .totalPrice(totalPrice)
-                .knightTableCount(req.knightTableCount())
+                .knightTableCount(knightCount)
                 .submittedAt(Instant.now())
                 .build();
 
@@ -280,11 +290,20 @@ public class PackageRequestService {
     }
 
     /**
-     * Resolves pricing for one option, creates a snapshot item, adds it to the list,
-     * and returns the finalPrice so the caller can accumulate the total.
+     * Resolves pricing for one option (no table context), creates a snapshot item,
+     * adds it to the list, and returns the finalPrice.
      */
     private BigDecimal snapshotItem(UserAccount customer, PackageOption option,
                                     List<PackageRequestItem> items) {
+        return snapshotItemWithContext(customer, option, null, items);
+    }
+
+    /**
+     * Resolves pricing for one option, creates a snapshot item with an optional
+     * tableContext (REGULAR/KNIGHT/null), adds it to the list, and returns finalPrice.
+     */
+    private BigDecimal snapshotItemWithContext(UserAccount customer, PackageOption option,
+                                               String tableContext, List<PackageRequestItem> items) {
         BigDecimal globalPrice = option.getGlobalPrice();
         var maybeOverride = overrideRepository
                 .findByCustomerIdAndPackageOption_Id(customer.getId(), option.getId());
@@ -297,8 +316,113 @@ public class PackageRequestService {
                 .globalPriceSnapshot(globalPrice)
                 .customerOverridePriceSnapshot(overridePrice)
                 .finalPrice(finalPrice)
+                .tableContext(tableContext)
                 .build());
         return finalPrice;
+    }
+
+    /**
+     * Validates and snapshots all components of a table design (frame, flowers, candles)
+     * for the given table context (REGULAR or KNIGHT).
+     * Returns the sum of all item prices.
+     */
+    private BigDecimal validateAndSnapshotTableDesign(UserAccount customer,
+                                                       TableDesignRequest design,
+                                                       String tableContext,
+                                                       List<PackageRequestItem> items) {
+        BigDecimal total = BigDecimal.ZERO;
+
+        // Frame — required
+        if (design.frameOptionId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "יש לבחור מסגרת עבור השולחן");
+        }
+        PackageOption frame = requireActiveOptionByCategory(
+                design.frameOptionId(), PackageOptionCategory.TABLE_FRAME);
+        validateTableContext(frame, tableContext);
+        total = total.add(snapshotItemWithContext(customer, frame, tableContext, items));
+
+        // Primary flower — required
+        if (design.primaryFlowerOptionId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "יש לבחור פרח ראשי עבור השולחן");
+        }
+        PackageOption primaryFlower = requireActiveOptionByCategory(
+                design.primaryFlowerOptionId(), PackageOptionCategory.TABLE_FLOWER);
+        validateTableContext(primaryFlower, tableContext);
+        total = total.add(snapshotItemWithContext(customer, primaryFlower, tableContext, items));
+
+        // Secondary flower — optional, only if primary is LARGE (null treated as LARGE)
+        if (design.secondarySmallFlowerOptionId() != null) {
+            String primarySize = primaryFlower.getFlowerSize();
+            boolean primaryIsLarge = primarySize == null || "LARGE".equalsIgnoreCase(primarySize);
+            if (!primaryIsLarge) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "לא ניתן לבחור פרח משני כאשר הפרח הראשי אינו פרח גדול");
+            }
+            PackageOption secondaryFlower = requireActiveOptionByCategory(
+                    design.secondarySmallFlowerOptionId(), PackageOptionCategory.TABLE_FLOWER);
+            validateTableContext(secondaryFlower, tableContext);
+            if (!"SMALL".equalsIgnoreCase(secondaryFlower.getFlowerSize())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "הפרח המשני חייב להיות פרח קטן (flowerSize=SMALL)");
+            }
+            total = total.add(snapshotItemWithContext(customer, secondaryFlower, tableContext, items));
+        }
+
+        // Candle mode
+        String candleMode = design.effectiveCandleMode();
+        if ("SELECTED".equals(candleMode)) {
+            List<Long> candleIds = design.safeCandleHolderIds();
+            if (candleIds.isEmpty() || candleIds.size() > 3) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "יש לבחור בין 1 ל-3 פמוטים כאשר מצב הבחירה הוא SELECTED");
+            }
+            for (Long candleId : candleIds) {
+                PackageOption candle = requireActiveOptionByCategory(
+                        candleId, PackageOptionCategory.TABLE_CANDLE);
+                validateTableContext(candle, tableContext);
+                total = total.add(snapshotItemWithContext(customer, candle, tableContext, items));
+            }
+        } else if (!"RANDOM".equals(candleMode)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "מצב בחירת פמוטים לא תקין. יש לבחור RANDOM או SELECTED");
+        }
+        // RANDOM: no candle holder items — hall decides
+
+        return total;
+    }
+
+    /**
+     * Verifies that an option is compatible with the requested table context.
+     * An option with null or BOTH tableContext is compatible with any context.
+     */
+    private void validateTableContext(PackageOption option, String requiredContext) {
+        String tc = option.getTableContext();
+        if (tc == null || "BOTH".equalsIgnoreCase(tc)) return;
+        if (!tc.equalsIgnoreCase(requiredContext)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "האפשרות \"" + option.getNameHe() + "\" אינה מתאימה לסוג השולחן שנבחר");
+        }
+    }
+
+    /**
+     * Looks up an active option and validates it belongs to the expected category.
+     */
+    private PackageOption requireActiveOptionByCategory(Long optionId,
+                                                         PackageOptionCategory expectedCategory) {
+        PackageOption option = packageOptionRepository.findById(optionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "אפשרות חבילה לא נמצאה: " + optionId));
+        if (!option.isActive()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "אפשרות החבילה \"" + option.getNameHe() + "\" אינה זמינה כרגע");
+        }
+        if (option.getCategory() != expectedCategory) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "אפשרות " + optionId + " אינה מסוג " + expectedCategory.name());
+        }
+        return option;
     }
 
     private UserAccount requireActiveCustomer(String email) {

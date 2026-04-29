@@ -78,6 +78,23 @@ public class PackageOption {
     @Column(name = "overlay_z_index")
     private Integer overlayZIndex;
 
+    /**
+     * Which table context this option applies to.
+     * Values: REGULAR | KNIGHT | BOTH (null = BOTH for backward compatibility).
+     * Only relevant for TABLE_FRAME, TABLE_FLOWER, TABLE_CANDLE categories.
+     */
+    @Column(name = "table_context", length = 10)
+    private String tableContext;
+
+    /**
+     * Flower size for TABLE_FLOWER options.
+     * Values: LARGE | SMALL (null = not applicable or LARGE by default).
+     * LARGE flowers allow an optional secondary SMALL flower.
+     * SMALL flowers cannot have a secondary flower.
+     */
+    @Column(name = "flower_size", length = 10)
+    private String flowerSize;
+
     /** Controls whether the option appears in the customer-facing builder. */
     @Column(name = "active", nullable = false)
     @Builder.Default

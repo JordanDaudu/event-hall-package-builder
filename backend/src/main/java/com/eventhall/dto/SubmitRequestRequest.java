@@ -1,5 +1,6 @@
 package com.eventhall.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
@@ -8,16 +9,12 @@ import java.util.List;
 /**
  * Request body for POST /api/customer/requests — submitting a new package request.
  *
+ * Table selections are split into regularTableDesign (always required) and
+ * knightTableDesign (required only when knightTableCount > 0), so the backend
+ * can validate and snapshot each table type independently.
+ *
  * The customer id is never accepted from this body; it is always extracted
  * from the authenticated JWT principal.
- *
- * Chuppah fields are explicit so the backend can validate compatibility rules:
- *   chuppahOptionId  — must reference a CHUPPAH option (required if any CHUPPAH options exist)
- *   chuppahUpgradeIds — must all reference CHUPPAH_UPGRADE options compatible with the chosen chuppah
- *   aisleOptionId    — explicit aisle selection (AISLE category)
- *
- * optionIds carries all remaining options (tables, napkins, tablecloth, bride chair, etc.)
- * and must NOT include the chuppah or chuppah upgrades to avoid double-counting.
  */
 public record SubmitRequestRequest(
 
@@ -31,7 +28,24 @@ public record SubmitRequestRequest(
 
         Long aisleOptionId,
 
-        List<@NotNull Long> optionIds,
+        /** Regular table design — always required. */
+        @NotNull(message = "יש להזין עיצוב שולחן רגיל")
+        @Valid
+        TableDesignRequest regularTableDesign,
+
+        @Min(value = 0, message = "מספר שולחנות האבירים חייב להיות 0 לפחות")
+        @Max(value = 4, message = "מספר שולחנות האבירים לא יכול לעלות על 4")
+        Integer knightTableCount,
+
+        /** Knight table design — required only when knightTableCount > 0. */
+        @Valid
+        TableDesignRequest knightTableDesign,
+
+        Long napkinOptionId,
+
+        Long tableclothOptionId,
+
+        Long brideChairOptionId,
 
         @NotBlank(message = "מספר תעודת זהות הוא שדה חובה")
         @Size(max = 50, message = "מספר תעודת זהות ארוך מדי")
@@ -47,19 +61,15 @@ public record SubmitRequestRequest(
 
         @NotNull(message = "תאריך האירוע הוא שדה חובה")
         @FutureOrPresent(message = "תאריך האירוע לא יכול להיות בעבר")
-        LocalDate eventDate,
-
-        @Min(value = 0, message = "מספר שולחנות הפרשים חייב להיות 0 לפחות")
-        @Max(value = 100, message = "מספר שולחנות הפרשים גבוה מדי")
-        Integer knightTableCount
+        LocalDate eventDate
 ) {
     /** Safe accessor — returns an empty list if chuppahUpgradeIds is null. */
     public List<Long> safeUpgradeIds() {
         return chuppahUpgradeIds != null ? chuppahUpgradeIds : List.of();
     }
 
-    /** Safe accessor — returns an empty list if optionIds is null. */
-    public List<Long> safeOptionIds() {
-        return optionIds != null ? optionIds : List.of();
+    /** Returns the effective knight table count, defaulting to 0 if null. */
+    public int safeKnightCount() {
+        return knightTableCount != null ? knightTableCount : 0;
     }
 }

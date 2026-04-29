@@ -44,7 +44,15 @@ public record CreatePackageOptionRequest(
         @Size(max = 30)
         String overlayWidth,
 
-        Integer overlayZIndex
+        Integer overlayZIndex,
+
+        /** REGULAR | KNIGHT | BOTH. Only relevant for table categories. Defaults to BOTH. */
+        @Size(max = 10)
+        String tableContext,
+
+        /** LARGE | SMALL. Only relevant for TABLE_FLOWER category. */
+        @Size(max = 10)
+        String flowerSize
 ) {
     /** Returns the effective sort order, defaulting to 0 if not provided. */
     public int effectiveSortOrder() {

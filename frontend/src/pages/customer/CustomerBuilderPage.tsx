@@ -35,22 +35,20 @@ interface EventDetails {
 
 // Main builder state
 
-interface TableSubSelections {
+interface TableDesignState {
     frameId: number | null;
     primaryFlowerId: number | null;
     secondaryFlowerId: number | null;
-    candleMode: "random" | "specific";
-    candleCount: number;
-    candleOptionId: number | null;
+    candleMode: "RANDOM" | "SELECTED";
+    candleHolderIds: number[];
 }
 
-const EMPTY_TABLE_SUBS: TableSubSelections = {
+const EMPTY_TABLE_DESIGN: TableDesignState = {
     frameId: null,
     primaryFlowerId: null,
     secondaryFlowerId: null,
-    candleMode: "random",
-    candleCount: 1,
-    candleOptionId: null,
+    candleMode: "RANDOM",
+    candleHolderIds: [],
 };
 
 // Preview component
@@ -465,58 +463,216 @@ function Step2Aisle({
     );
 }
 
-// Step 3 — Tables with sub-steps (domain-specific pools)
+// TableDesignPanel — reusable sub-component for regular/knight table design selections
 
-function Step3Tables({
+function TableDesignPanel({
+    label,
+    eyebrow,
     frameOpts,
     flowerOpts,
     candleOpts,
-    knightTableCount,
-    setKnightTableCount,
     subs,
     setSubs,
     effectivePrice,
-    venueImageUrl,
+    hoveredId,
+    setHoveredId,
 }: {
+    label: string;
+    eyebrow: string;
     frameOpts: PackageOptionResponse[];
     flowerOpts: PackageOptionResponse[];
     candleOpts: PackageOptionResponse[];
+    subs: TableDesignState;
+    setSubs: (s: TableDesignState) => void;
+    effectivePrice: (opt: PackageOptionResponse) => number;
+    hoveredId: number | null;
+    setHoveredId: (id: number | null) => void;
+}) {
+    function update<K extends keyof TableDesignState>(key: K, val: TableDesignState[K]) {
+        setSubs({ ...subs, [key]: val });
+    }
+
+    const primaryFlowerOpt = flowerOpts.find((o) => o.id === subs.primaryFlowerId) ?? null;
+    const primaryIsLargeOrUnset = !primaryFlowerOpt || !primaryFlowerOpt.flowerSize || primaryFlowerOpt.flowerSize === "LARGE";
+    const smallFlowerOpts = flowerOpts.filter((o) => o.flowerSize === "SMALL");
+
+    return (
+        <div style={{ marginBottom: "0" }}>
+            <div style={{ padding: "18px 0 6px", borderTop: "2px solid var(--color-border, #e5e7eb)" }}>
+                <h3 style={{ marginBottom: "4px" }}>{label}</h3>
+                <p className="muted" style={{ fontSize: "0.85rem", marginBottom: "18px" }}>{eyebrow}</p>
+            </div>
+
+            {/* Frame */}
+            {frameOpts.length > 0 && (
+                <div className="card">
+                    <h4 style={{ marginBottom: "12px" }}>
+                        מסגרת שולחן <span style={{ color: "var(--color-error, #ef4444)", fontSize: "0.8rem" }}>*</span>
+                    </h4>
+                    <OptionGrid
+                        options={frameOpts}
+                        selectedId={subs.frameId}
+                        onSelect={(id) => update("frameId", subs.frameId === id ? null : id)}
+                        effectivePrice={effectivePrice}
+                        onHover={setHoveredId}
+                    />
+                </div>
+            )}
+
+            {/* Primary flower */}
+            {flowerOpts.length > 0 && (
+                <div className="card">
+                    <h4 style={{ marginBottom: "12px" }}>
+                        פרח ראשי <span style={{ color: "var(--color-error, #ef4444)", fontSize: "0.8rem" }}>*</span>
+                    </h4>
+                    <OptionGrid
+                        options={flowerOpts}
+                        selectedId={subs.primaryFlowerId}
+                        onSelect={(id) => {
+                            const newId = subs.primaryFlowerId === id ? null : id;
+                            setSubs({ ...subs, primaryFlowerId: newId, secondaryFlowerId: null });
+                        }}
+                        effectivePrice={effectivePrice}
+                        onHover={setHoveredId}
+                    />
+                </div>
+            )}
+
+            {/* Secondary small flower — only when primary is LARGE (or unset) and SMALL options exist */}
+            {subs.primaryFlowerId !== null && primaryIsLargeOrUnset && smallFlowerOpts.length > 0 && (
+                <div className="card">
+                    <h4 style={{ marginBottom: "6px" }}>
+                        פרח משני קטן
+                        <span className="muted" style={{ fontSize: "0.82rem", fontWeight: 400, marginInlineStart: "8px" }}>(לא חובה)</span>
+                    </h4>
+                    <p className="muted" style={{ fontSize: "0.84rem", marginBottom: "14px" }}>
+                        בחרו פרח קטן משני להשלמת העיצוב.
+                    </p>
+                    <OptionGrid
+                        options={smallFlowerOpts}
+                        selectedId={subs.secondaryFlowerId}
+                        onSelect={(id) => update("secondaryFlowerId", subs.secondaryFlowerId === id ? null : id)}
+                        effectivePrice={effectivePrice}
+                        onHover={setHoveredId}
+                    />
+                </div>
+            )}
+
+            {/* Candle mode */}
+            <div className="card">
+                <h4 style={{ marginBottom: "14px" }}>מצב פמוט</h4>
+                <div className="candle-mode-row">
+                    <button
+                        type="button"
+                        className={`candle-mode-btn${subs.candleMode === "RANDOM" ? " selected" : ""}`}
+                        onClick={() => update("candleMode", "RANDOM")}
+                    >
+                        <span>🕯 אקראי</span>
+                        <small>בחירת האולם</small>
+                    </button>
+                    <button
+                        type="button"
+                        className={`candle-mode-btn${subs.candleMode === "SELECTED" ? " selected" : ""}`}
+                        onClick={() => update("candleMode", "SELECTED")}
+                    >
+                        <span>🕯 בחירה</span>
+                        <small>בחרו פמוטים</small>
+                    </button>
+                </div>
+                {subs.candleMode === "SELECTED" && candleOpts.length > 0 && (
+                    <div style={{ marginTop: "18px" }}>
+                        <p className="muted" style={{ fontSize: "0.86rem", marginBottom: "12px" }}>
+                            בחרו עד 3 פמוטים ({subs.candleHolderIds.length}/3 נבחרו):
+                        </p>
+                        <div className="option-card-grid">
+                            {candleOpts.map((opt) => {
+                                const isSelected = subs.candleHolderIds.includes(opt.id);
+                                const isDisabled = !isSelected && subs.candleHolderIds.length >= 3;
+                                return (
+                                    <button
+                                        key={opt.id}
+                                        type="button"
+                                        className={`option-card${isSelected ? " selected" : ""}${isDisabled ? " disabled" : ""}${opt.imageUrl ? " has-thumb" : ""}`}
+                                        disabled={isDisabled}
+                                        onClick={() => {
+                                            if (isSelected) {
+                                                update("candleHolderIds", subs.candleHolderIds.filter((id) => id !== opt.id));
+                                            } else if (!isDisabled) {
+                                                update("candleHolderIds", [...subs.candleHolderIds, opt.id]);
+                                            }
+                                        }}
+                                        onMouseEnter={() => setHoveredId(opt.id)}
+                                        onMouseLeave={() => setHoveredId(null)}
+                                    >
+                                        {opt.imageUrl && (
+                                            <img src={opt.imageUrl} alt={opt.nameHe} className="option-card-thumb" />
+                                        )}
+                                        <div className="option-card-inner">
+                                            <div className="option-card-name">{opt.nameHe}</div>
+                                            {opt.nameEn && <div className="option-card-name-en">{opt.nameEn}</div>}
+                                            <div className="option-card-price">{formatILS(effectivePrice(opt))}</div>
+                                        </div>
+                                        {isSelected && <div className="option-card-check">✓</div>}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+// Step 3 — Tables: knight count + regular design (always) + knight design (if count > 0)
+
+function Step3Tables({
+    regularFrameOpts, regularFlowerOpts, regularCandleOpts,
+    knightFrameOpts, knightFlowerOpts, knightCandleOpts,
+    knightTableCount, setKnightTableCount,
+    regularSubs, setRegularSubs,
+    knightSubs, setKnightSubs,
+    effectivePrice, venueImageUrl,
+}: {
+    regularFrameOpts: PackageOptionResponse[];
+    regularFlowerOpts: PackageOptionResponse[];
+    regularCandleOpts: PackageOptionResponse[];
+    knightFrameOpts: PackageOptionResponse[];
+    knightFlowerOpts: PackageOptionResponse[];
+    knightCandleOpts: PackageOptionResponse[];
     knightTableCount: number;
     setKnightTableCount: (n: number) => void;
-    subs: TableSubSelections;
-    setSubs: (s: TableSubSelections) => void;
+    regularSubs: TableDesignState;
+    setRegularSubs: (s: TableDesignState) => void;
+    knightSubs: TableDesignState;
+    setKnightSubs: (s: TableDesignState) => void;
     effectivePrice: (opt: PackageOptionResponse) => number;
     venueImageUrl?: string | null;
 }) {
     const [hoveredId, setHoveredId] = useState<number | null>(null);
-    const allTableOpts = useMemo(() => [...frameOpts, ...flowerOpts, ...candleOpts], [frameOpts, flowerOpts, candleOpts]);
-    const hoveredOpt = hoveredId !== null ? (allTableOpts.find((o) => o.id === hoveredId) ?? null) : null;
-    const selectedFrameOpt = frameOpts.find((o) => o.id === subs.frameId) ?? null;
-    const selectedFlowerOpt = flowerOpts.find((o) => o.id === subs.primaryFlowerId) ?? null;
-    const selectedCandleOpt = candleOpts.find((o) => o.id === subs.candleOptionId) ?? null;
-    const fallbackSelected = selectedFrameOpt ?? selectedFlowerOpt ?? selectedCandleOpt;
-    const previewOpt = hoveredOpt ?? fallbackSelected;
-
-    function update<K extends keyof TableSubSelections>(key: K, val: TableSubSelections[K]) {
-        setSubs({ ...subs, [key]: val });
-    }
+    const allOpts = useMemo(
+        () => [...regularFrameOpts, ...regularFlowerOpts, ...regularCandleOpts, ...knightFrameOpts, ...knightFlowerOpts, ...knightCandleOpts],
+        [regularFrameOpts, regularFlowerOpts, regularCandleOpts, knightFrameOpts, knightFlowerOpts, knightCandleOpts]
+    );
+    const hoveredOpt = hoveredId !== null ? (allOpts.find((o) => o.id === hoveredId) ?? null) : null;
+    const selectedFrameOpt = regularFrameOpts.find((o) => o.id === regularSubs.frameId) ?? null;
+    const previewOpt = hoveredOpt ?? selectedFrameOpt;
 
     return (
         <div className="builder-step">
             <div className="builder-step-header">
                 <span className="eyebrow">שלב 4 / 7 · שולחנות ועיצוב</span>
                 <h2>שולחנות</h2>
-                <p>בחרו מספר שולחנות אבירים ואת עיצוב השולחנות.</p>
+                <p>הגדירו את עיצוב השולחנות ואת מספר שולחנות האבירים.</p>
             </div>
 
-            {knightTableCount > 0 && (
-                <OptionPreview selected={previewOpt} venueImageUrl={venueImageUrl} />
-            )}
+            <OptionPreview selected={previewOpt} venueImageUrl={venueImageUrl} />
 
+            {/* Knight count selector */}
             <div className="card">
                 <h3 style={{ marginBottom: "14px" }}>שולחנות אבירים</h3>
                 <p className="muted" style={{ fontSize: "0.88rem", marginBottom: "16px" }}>
-                    0 = ללא שולחנות אבירים
+                    בחרו את מספר שולחנות האבירים (שולחנות הקריאה המרכזיים). 0 = ללא שולחנות אבירים.
                 </p>
                 <div className="knight-count-row">
                     {[0, 1, 2, 3, 4].map((n) => (
@@ -526,7 +682,7 @@ function Step3Tables({
                             className={`knight-count-btn${knightTableCount === n ? " selected" : ""}`}
                             onClick={() => {
                                 setKnightTableCount(n);
-                                if (n === 0) setSubs({ ...EMPTY_TABLE_SUBS });
+                                if (n === 0) setKnightSubs({ ...EMPTY_TABLE_DESIGN });
                             }}
                         >
                             {n}
@@ -535,114 +691,34 @@ function Step3Tables({
                 </div>
             </div>
 
+            {/* Regular table design — always required */}
+            <TableDesignPanel
+                label="עיצוב שולחן רגיל"
+                eyebrow="בחרו את העיצוב לשולחנות הרגילים של האירוע. שדות אלה הם חובה."
+                frameOpts={regularFrameOpts}
+                flowerOpts={regularFlowerOpts}
+                candleOpts={regularCandleOpts}
+                subs={regularSubs}
+                setSubs={setRegularSubs}
+                effectivePrice={effectivePrice}
+                hoveredId={hoveredId}
+                setHoveredId={setHoveredId}
+            />
+
+            {/* Knight table design — only when count > 0 */}
             {knightTableCount > 0 && (
-                <>
-                    {/* Sub-step A: Frame */}
-                    {frameOpts.length > 0 && (
-                        <div className="card">
-                            <h3 style={{ marginBottom: "12px" }}>מסגרת שולחן</h3>
-                            <OptionGrid
-                                options={frameOpts}
-                                selectedId={subs.frameId}
-                                onSelect={(id) => update("frameId", subs.frameId === id ? null : id)}
-                                effectivePrice={effectivePrice}
-                                onHover={setHoveredId}
-                            />
-                        </div>
-                    )}
-
-                    {/* Sub-step B: Primary flower */}
-                    {flowerOpts.length > 0 && (
-                        <div className="card">
-                            <h3 style={{ marginBottom: "12px" }}>פרח ראשי</h3>
-                            <OptionGrid
-                                options={flowerOpts}
-                                selectedId={subs.primaryFlowerId}
-                                onSelect={(id) => {
-                                    const newId = subs.primaryFlowerId === id ? null : id;
-                                    setSubs({ ...subs, primaryFlowerId: newId, secondaryFlowerId: null });
-                                }}
-                                effectivePrice={effectivePrice}
-                                onHover={setHoveredId}
-                            />
-                        </div>
-                    )}
-
-                    {/* Sub-step C: Secondary flower (available after primary selected, different option required) */}
-                    {subs.primaryFlowerId !== null && flowerOpts.length > 1 && (
-                        <div className="card">
-                            <h3 style={{ marginBottom: "6px" }}>פרח משני <span className="muted" style={{ fontSize: "0.82rem", fontWeight: 400 }}>(לא חובה)</span></h3>
-                            <p className="muted" style={{ fontSize: "0.84rem", marginBottom: "14px" }}>
-                                בחרו פרח משני להשלמת העיצוב, או דלגו לשלב הבא.
-                            </p>
-                            <OptionGrid
-                                options={flowerOpts}
-                                selectedId={subs.secondaryFlowerId}
-                                onSelect={(id) => update("secondaryFlowerId", subs.secondaryFlowerId === id ? null : id)}
-                                effectivePrice={effectivePrice}
-                                disabledIds={subs.primaryFlowerId ? [subs.primaryFlowerId] : []}
-                                onHover={setHoveredId}
-                            />
-                        </div>
-                    )}
-
-                    {/* Sub-step D: Candle holder mode */}
-                    <div className="card">
-                        <h3 style={{ marginBottom: "14px" }}>מצב פמוט</h3>
-                        <div className="candle-mode-row">
-                            <button
-                                type="button"
-                                className={`candle-mode-btn${subs.candleMode === "random" ? " selected" : ""}`}
-                                onClick={() => update("candleMode", "random")}
-                            >
-                                <span>🕯 אקראי</span>
-                                <small>מיקום אקראי</small>
-                            </button>
-                            <button
-                                type="button"
-                                className={`candle-mode-btn${subs.candleMode === "specific" ? " selected" : ""}`}
-                                onClick={() => update("candleMode", "specific")}
-                            >
-                                <span>🕯 ספירה</span>
-                                <small>בחרו כמות</small>
-                            </button>
-                        </div>
-                        {subs.candleMode === "specific" && (
-                            <div style={{ marginTop: "16px" }}>
-                                <p className="muted" style={{ fontSize: "0.86rem", marginBottom: "10px" }}>
-                                    מספר פמוטים לשולחן:
-                                </p>
-                                <div className="knight-count-row">
-                                    {[1, 2, 3].map((n) => (
-                                        <button
-                                            key={n}
-                                            type="button"
-                                            className={`knight-count-btn${subs.candleCount === n ? " selected" : ""}`}
-                                            onClick={() => update("candleCount", n)}
-                                        >
-                                            {n}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                        {/* Candle option selection */}
-                        {candleOpts.length > 0 && (
-                            <div style={{ marginTop: "18px" }}>
-                                <p className="muted" style={{ fontSize: "0.86rem", marginBottom: "12px" }}>
-                                    בחרו פמוט:
-                                </p>
-                                <OptionGrid
-                                    options={candleOpts}
-                                    selectedId={subs.candleOptionId}
-                                    onSelect={(id) => update("candleOptionId", subs.candleOptionId === id ? null : id)}
-                                    effectivePrice={effectivePrice}
-                                    onHover={setHoveredId}
-                                />
-                            </div>
-                        )}
-                    </div>
-                </>
+                <TableDesignPanel
+                    label="עיצוב שולחן אביר"
+                    eyebrow="בחרו עיצוב ייחודי לשולחנות האבירים. ניתן לבחור עיצוב שונה מהשולחנות הרגילים."
+                    frameOpts={knightFrameOpts}
+                    flowerOpts={knightFlowerOpts}
+                    candleOpts={knightCandleOpts}
+                    subs={knightSubs}
+                    setSubs={setKnightSubs}
+                    effectivePrice={effectivePrice}
+                    hoveredId={hoveredId}
+                    setHoveredId={setHoveredId}
+                />
             )}
         </div>
     );
@@ -770,7 +846,6 @@ function Step6Summary({
     venues,
     selectedOptions,
     knightTableCount,
-    tableSubs,
     runningTotal,
     effectivePrice,
     basePackagePrice,
@@ -782,7 +857,6 @@ function Step6Summary({
     venues: VenueResponse[];
     selectedOptions: PackageOptionResponse[];
     knightTableCount: number;
-    tableSubs: TableSubSelections;
     runningTotal: number;
     effectivePrice: (opt: PackageOptionResponse) => number;
     basePackagePrice: number;
@@ -812,9 +886,6 @@ function Step6Summary({
                         ["מספר זהות", eventDetails.eventCustomerIdentityNumber],
                         ["טלפון", eventDetails.eventContactPhoneNumber],
                         ...(knightTableCount > 0 ? [["שולחנות אבירים", String(knightTableCount)]] : []),
-                        ...(tableSubs.candleMode !== "random" && knightTableCount > 0
-                            ? [["פמוטים לשולחן", String(tableSubs.candleCount)]]
-                            : []),
                     ].map(([label, val]) => (
                         <div key={label} className="summary-row">
                             <span className="summary-label">{label}</span>
@@ -902,7 +973,8 @@ export default function CustomerBuilderPage() {
     const [selectedChuppahUpgradeIds, setSelectedChuppahUpgradeIds] = useState<number[]>([]);
     const [aisleId, setAisleId] = useState<number | null>(null);
     const [knightTableCount, setKnightTableCount] = useState(0);
-    const [tableSubs, setTableSubs] = useState<TableSubSelections>({ ...EMPTY_TABLE_SUBS });
+    const [regularTableSubs, setRegularTableSubs] = useState<TableDesignState>({ ...EMPTY_TABLE_DESIGN });
+    const [knightTableSubs, setKnightTableSubs] = useState<TableDesignState>({ ...EMPTY_TABLE_DESIGN });
     const [napkinId, setNapkinId] = useState<number | null>(null);
     const [tableclothId, setTableclothId] = useState<number | null>(null);
     const [brideChairId, setBrideChairId] = useState<number | null>(null);
@@ -915,9 +987,18 @@ export default function CustomerBuilderPage() {
     const chuppahOpts = useMemo(() => options.filter((o) => o.category === "CHUPPAH"), [options]);
     const chuppahUpgradeOpts = useMemo(() => options.filter((o) => o.category === "CHUPPAH_UPGRADE"), [options]);
     const aisleOpts = useMemo(() => options.filter((o) => o.category === "AISLE"), [options]);
-    const tableFrameOpts = useMemo(() => options.filter((o) => o.category === "TABLE_FRAME"), [options]);
-    const tableFlowerOpts = useMemo(() => options.filter((o) => o.category === "TABLE_FLOWER"), [options]);
-    const tableCandleOpts = useMemo(() => options.filter((o) => o.category === "TABLE_CANDLE"), [options]);
+
+    function matchesContext(tc: string | null | undefined, required: "REGULAR" | "KNIGHT") {
+        return !tc || tc === "BOTH" || tc === required;
+    }
+
+    const regularFrameOpts = useMemo(() => options.filter((o) => o.category === "TABLE_FRAME" && matchesContext(o.tableContext, "REGULAR")), [options]);
+    const regularFlowerOpts = useMemo(() => options.filter((o) => o.category === "TABLE_FLOWER" && matchesContext(o.tableContext, "REGULAR")), [options]);
+    const regularCandleOpts = useMemo(() => options.filter((o) => o.category === "TABLE_CANDLE" && matchesContext(o.tableContext, "REGULAR")), [options]);
+    const knightFrameOpts = useMemo(() => options.filter((o) => o.category === "TABLE_FRAME" && matchesContext(o.tableContext, "KNIGHT")), [options]);
+    const knightFlowerOpts = useMemo(() => options.filter((o) => o.category === "TABLE_FLOWER" && matchesContext(o.tableContext, "KNIGHT")), [options]);
+    const knightCandleOpts = useMemo(() => options.filter((o) => o.category === "TABLE_CANDLE" && matchesContext(o.tableContext, "KNIGHT")), [options]);
+
     const napkinOpts = useMemo(() => options.filter((o) => o.category === "NAPKIN"), [options]);
     const tableclothOpts = useMemo(() => options.filter((o) => o.category === "TABLECLOTH"), [options]);
     const brideChairOpts = useMemo(() => options.filter((o) => o.category === "BRIDE_CHAIR"), [options]);
@@ -964,15 +1045,23 @@ export default function CustomerBuilderPage() {
         chuppahId,
         ...selectedChuppahUpgradeIds,
         aisleId,
-        tableSubs.frameId,
-        tableSubs.primaryFlowerId,
-        tableSubs.secondaryFlowerId,
-        tableSubs.candleOptionId,
+        regularTableSubs.frameId,
+        regularTableSubs.primaryFlowerId,
+        regularTableSubs.secondaryFlowerId,
+        ...regularTableSubs.candleHolderIds,
+        ...(knightTableCount > 0 ? [
+            knightTableSubs.frameId,
+            knightTableSubs.primaryFlowerId,
+            knightTableSubs.secondaryFlowerId,
+            ...knightTableSubs.candleHolderIds,
+        ] : []),
         napkinId,
         tableclothId,
         brideChairId,
     ].filter((id): id is number => id !== null), [
-        chuppahId, selectedChuppahUpgradeIds, aisleId, tableSubs, napkinId, tableclothId, brideChairId
+        chuppahId, selectedChuppahUpgradeIds, aisleId,
+        regularTableSubs, knightTableSubs, knightTableCount,
+        napkinId, tableclothId, brideChairId
     ]);
 
     const selectedOptionObjects = useMemo(() =>
@@ -1007,10 +1096,19 @@ export default function CustomerBuilderPage() {
                 if (aisleOpts.length > 0 && !aisleId) return "נא לבחור סגנון שדרה";
                 return null;
             case 3:
+                if (regularFrameOpts.length > 0 && !regularTableSubs.frameId) return "נא לבחור מסגרת לשולחן הרגיל";
+                if (regularFlowerOpts.length > 0 && !regularTableSubs.primaryFlowerId) return "נא לבחור פרח ראשי לשולחן הרגיל";
+                if (regularTableSubs.candleMode === "SELECTED") {
+                    if (regularTableSubs.candleHolderIds.length === 0) return "נא לבחור לפחות פמוט אחד לשולחן הרגיל";
+                    if (regularTableSubs.candleHolderIds.length > 3) return "ניתן לבחור עד 3 פמוטים לשולחן הרגיל";
+                }
                 if (knightTableCount > 0) {
-                    if (tableFrameOpts.length > 0 && !tableSubs.frameId) return "נא לבחור מסגרת שולחן";
-                    if (tableFlowerOpts.length > 0 && !tableSubs.primaryFlowerId) return "נא לבחור פרח ראשי";
-                    if (tableCandleOpts.length > 0 && !tableSubs.candleOptionId) return "נא לבחור פמוט";
+                    if (knightFrameOpts.length > 0 && !knightTableSubs.frameId) return "נא לבחור מסגרת לשולחן האביר";
+                    if (knightFlowerOpts.length > 0 && !knightTableSubs.primaryFlowerId) return "נא לבחור פרח ראשי לשולחן האביר";
+                    if (knightTableSubs.candleMode === "SELECTED") {
+                        if (knightTableSubs.candleHolderIds.length === 0) return "נא לבחור לפחות פמוט אחד לשולחן האביר";
+                        if (knightTableSubs.candleHolderIds.length > 3) return "ניתן לבחור עד 3 פמוטים לשולחן האביר";
+                    }
                 }
                 return null;
             case 4:
@@ -1042,19 +1140,9 @@ export default function CustomerBuilderPage() {
     // ── Submission ────────────────────────────────────────────────────────────
     async function handleSubmit() {
         if (!eventDetails.venueId || !chuppahId) return;
+        if (!regularTableSubs.frameId || !regularTableSubs.primaryFlowerId) return;
         setSubmitting(true);
         setSubmitError(null);
-
-        // Build optionIds for remaining sections (exclude chuppah, upgrades, aisle — sent explicitly)
-        const otherOptionIds = [
-            tableSubs.frameId,
-            tableSubs.primaryFlowerId,
-            tableSubs.secondaryFlowerId,
-            tableSubs.candleOptionId,
-            napkinId,
-            tableclothId,
-            brideChairId,
-        ].filter((id): id is number => id !== null);
 
         try {
             await submitPackageRequest({
@@ -1062,12 +1150,30 @@ export default function CustomerBuilderPage() {
                 chuppahOptionId: chuppahId,
                 chuppahUpgradeIds: selectedChuppahUpgradeIds,
                 aisleOptionId: aisleId,
+                regularTableDesign: {
+                    frameOptionId: regularTableSubs.frameId,
+                    primaryFlowerOptionId: regularTableSubs.primaryFlowerId,
+                    secondarySmallFlowerOptionId: regularTableSubs.secondaryFlowerId,
+                    candleSelectionMode: regularTableSubs.candleMode,
+                    candleHolderOptionIds: regularTableSubs.candleHolderIds,
+                },
+                knightTableCount: knightTableCount > 0 ? knightTableCount : 0,
+                knightTableDesign: knightTableCount > 0 && knightTableSubs.frameId && knightTableSubs.primaryFlowerId
+                    ? {
+                        frameOptionId: knightTableSubs.frameId,
+                        primaryFlowerOptionId: knightTableSubs.primaryFlowerId,
+                        secondarySmallFlowerOptionId: knightTableSubs.secondaryFlowerId,
+                        candleSelectionMode: knightTableSubs.candleMode,
+                        candleHolderOptionIds: knightTableSubs.candleHolderIds,
+                    }
+                    : null,
+                napkinOptionId: napkinId,
+                tableclothOptionId: tableclothId,
+                brideChairOptionId: brideChairId,
                 eventContactName: eventDetails.eventContactName,
                 eventCustomerIdentityNumber: eventDetails.eventCustomerIdentityNumber,
                 eventContactPhoneNumber: eventDetails.eventContactPhoneNumber,
                 eventDate: eventDetails.eventDate,
-                knightTableCount: knightTableCount > 0 ? knightTableCount : null,
-                optionIds: otherOptionIds,
             });
             setSubmitted(true);
         } catch (err: unknown) {
@@ -1105,7 +1211,9 @@ export default function CustomerBuilderPage() {
                             className="button"
                             onClick={() => {
                                 setStep(0); setChuppahId(null); setSelectedChuppahUpgradeIds([]); setAisleId(null);
-                                setKnightTableCount(0); setTableSubs({ ...EMPTY_TABLE_SUBS });
+                                setKnightTableCount(0);
+                                setRegularTableSubs({ ...EMPTY_TABLE_DESIGN });
+                                setKnightTableSubs({ ...EMPTY_TABLE_DESIGN });
                                 setNapkinId(null); setTableclothId(null); setBrideChairId(null);
                                 setEventDetails({
                                     venueId: null, eventDate: "",
@@ -1165,13 +1273,18 @@ export default function CustomerBuilderPage() {
             case 3:
                 return (
                     <Step3Tables
-                        frameOpts={tableFrameOpts}
-                        flowerOpts={tableFlowerOpts}
-                        candleOpts={tableCandleOpts}
+                        regularFrameOpts={regularFrameOpts}
+                        regularFlowerOpts={regularFlowerOpts}
+                        regularCandleOpts={regularCandleOpts}
+                        knightFrameOpts={knightFrameOpts}
+                        knightFlowerOpts={knightFlowerOpts}
+                        knightCandleOpts={knightCandleOpts}
                         knightTableCount={knightTableCount}
                         setKnightTableCount={setKnightTableCount}
-                        subs={tableSubs}
-                        setSubs={setTableSubs}
+                        regularSubs={regularTableSubs}
+                        setRegularSubs={setRegularTableSubs}
+                        knightSubs={knightTableSubs}
+                        setKnightSubs={setKnightTableSubs}
                         effectivePrice={effectivePrice}
                         venueImageUrl={selectedVenueImageUrl}
                     />
@@ -1206,7 +1319,6 @@ export default function CustomerBuilderPage() {
                         venues={venues}
                         selectedOptions={selectedOptionObjects}
                         knightTableCount={knightTableCount}
-                        tableSubs={tableSubs}
                         runningTotal={runningTotal}
                         effectivePrice={effectivePrice}
                         basePackagePrice={user?.basePackagePrice ?? 0}

@@ -8,8 +8,6 @@ import java.time.Instant;
 /**
  * Response DTO for a package option.
  * Returned by both the public listing and the admin endpoints.
- * The same record is safe for customers (no sensitive pricing data beyond
- * the global price, which is intentionally visible in the builder UI).
  */
 public record PackageOptionResponse(
         Long id,
@@ -25,6 +23,10 @@ public record PackageOptionResponse(
         String overlayLeft,
         String overlayWidth,
         Integer overlayZIndex,
+        /** REGULAR | KNIGHT | BOTH (null = BOTH). Only relevant for table categories. */
+        String tableContext,
+        /** LARGE | SMALL (null = not applicable). Only relevant for TABLE_FLOWER. */
+        String flowerSize,
         Instant createdAt,
         Instant updatedAt
 ) {
@@ -43,6 +45,8 @@ public record PackageOptionResponse(
                 o.getOverlayLeft(),
                 o.getOverlayWidth(),
                 o.getOverlayZIndex(),
+                o.getTableContext(),
+                o.getFlowerSize(),
                 o.getCreatedAt(),
                 o.getUpdatedAt()
         );

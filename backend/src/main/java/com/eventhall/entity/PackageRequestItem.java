@@ -61,6 +61,13 @@ public class PackageRequestItem {
     @Column(name = "final_price", nullable = false, precision = 12, scale = 2)
     private BigDecimal finalPrice;
 
+    /**
+     * Which table this item belongs to: REGULAR or KNIGHT.
+     * Null for non-table items (chuppah, aisle, napkin, etc.).
+     */
+    @Column(name = "table_context", length = 10)
+    private String tableContext;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

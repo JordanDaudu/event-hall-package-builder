@@ -15,7 +15,9 @@ public record PackageRequestItemResponse(
         BigDecimal customerOverridePriceSnapshot,
         BigDecimal finalPrice,
         boolean hasCustomerOverride,
-        PackageOptionCategory category
+        PackageOptionCategory category,
+        /** REGULAR | KNIGHT for table items; null for non-table items. */
+        String tableContext
 ) {
     public static PackageRequestItemResponse from(PackageRequestItem item) {
         return new PackageRequestItemResponse(
@@ -26,7 +28,8 @@ public record PackageRequestItemResponse(
                 item.getCustomerOverridePriceSnapshot(),
                 item.getFinalPrice(),
                 item.getCustomerOverridePriceSnapshot() != null,
-                item.getPackageOption().getCategory()
+                item.getPackageOption().getCategory(),
+                item.getTableContext()
         );
     }
 }

@@ -133,6 +133,10 @@ export type PackageOptionCategory =
 
 export type VisualBehavior = "REPLACE_IMAGE" | "OVERLAY_IMAGE" | "NO_VISUAL";
 
+export type TableContextValue = "REGULAR" | "KNIGHT" | "BOTH";
+export type FlowerSizeValue = "LARGE" | "SMALL";
+export type CandleSelectionMode = "RANDOM" | "SELECTED";
+
 export interface PackageOptionResponse {
     id: number;
     nameHe: string;
@@ -147,6 +151,10 @@ export interface PackageOptionResponse {
     overlayLeft?: string | null;
     overlayWidth?: string | null;
     overlayZIndex?: number | null;
+    /** REGULAR | KNIGHT | BOTH (null = BOTH). Only relevant for table categories. */
+    tableContext?: TableContextValue | null;
+    /** LARGE | SMALL (null = treated as LARGE). Only relevant for TABLE_FLOWER. */
+    flowerSize?: FlowerSizeValue | null;
 }
 
 export type ChuppahCompatibilityMap = Record<number, number[]>;
@@ -155,17 +163,29 @@ export type ChuppahCompatibilityMap = Record<number, number[]>;
 
 export type RequestStatus = "PENDING" | "APPROVED" | "REJECTED";
 
+export interface TableDesignRequest {
+    frameOptionId: number;
+    primaryFlowerOptionId: number;
+    secondarySmallFlowerOptionId?: number | null;
+    candleSelectionMode: CandleSelectionMode;
+    candleHolderOptionIds: number[];
+}
+
 export interface SubmitRequestRequest {
     venueId: number;
     chuppahOptionId: number;
     chuppahUpgradeIds: number[];
     aisleOptionId?: number | null;
-    optionIds: number[];
+    regularTableDesign: TableDesignRequest;
+    knightTableCount?: number | null;
+    knightTableDesign?: TableDesignRequest | null;
+    napkinOptionId?: number | null;
+    tableclothOptionId?: number | null;
+    brideChairOptionId?: number | null;
     eventCustomerIdentityNumber: string;
     eventContactName: string;
     eventContactPhoneNumber: string;
     eventDate: string;
-    knightTableCount?: number | null;
 }
 
 export interface PackageRequestItemResponse {
@@ -177,6 +197,8 @@ export interface PackageRequestItemResponse {
     finalPrice: number;
     hasCustomerOverride: boolean;
     category: PackageOptionCategory;
+    /** REGULAR | KNIGHT for table items; null for non-table items. */
+    tableContext?: string | null;
 }
 
 export interface PackageRequestSummaryResponse {
@@ -266,6 +288,8 @@ export interface CreatePackageOptionRequest {
     overlayLeft?: string;
     overlayWidth?: string;
     overlayZIndex?: number;
+    tableContext?: TableContextValue;
+    flowerSize?: FlowerSizeValue;
 }
 
 export interface UpdatePackageOptionRequest {
@@ -280,6 +304,8 @@ export interface UpdatePackageOptionRequest {
     overlayLeft?: string;
     overlayWidth?: string;
     overlayZIndex?: number;
+    tableContext?: TableContextValue;
+    flowerSize?: FlowerSizeValue;
 }
 
 // ─── Chuppah Compatibility ────────────────────────────────────────────────────

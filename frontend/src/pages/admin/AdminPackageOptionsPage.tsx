@@ -12,7 +12,7 @@ import { useToast } from "../../contexts/ToastContext";
 import Modal from "../../components/Modal";
 import ConfirmDeleteDialog from "../../components/ConfirmDeleteDialog";
 import { formatILS } from "../../utils/currency";
-import type { PackageOptionResponse, PackageOptionCategory, VisualBehavior } from "../../types/api";
+import type { PackageOptionResponse, PackageOptionCategory, VisualBehavior, TableContextValue, FlowerSizeValue } from "../../types/api";
 
 const CATEGORIES: { value: PackageOptionCategory | "ALL"; label: string }[] = [
     { value: "ALL", label: "הכול" },
@@ -61,9 +61,13 @@ const EMPTY_FORM = {
     overlayLeft: "",
     overlayWidth: "",
     overlayZIndex: "",
+    tableContext: "" as "" | TableContextValue,
+    flowerSize: "" as "" | FlowerSizeValue,
 };
 
 type OptionForm = typeof EMPTY_FORM;
+
+const TABLE_CATEGORIES: PackageOptionCategory[] = ["TABLE_FRAME", "TABLE_FLOWER", "TABLE_CANDLE"];
 
 export default function AdminPackageOptionsPage() {
     usePageTitle("אפשרויות חבילה");
@@ -114,6 +118,8 @@ export default function AdminPackageOptionsPage() {
             overlayLeft: o.overlayLeft ?? "",
             overlayWidth: o.overlayWidth ?? "",
             overlayZIndex: o.overlayZIndex != null ? String(o.overlayZIndex) : "",
+            tableContext: (o.tableContext ?? "") as OptionForm["tableContext"],
+            flowerSize: (o.flowerSize ?? "") as OptionForm["flowerSize"],
         };
     }
 
@@ -133,6 +139,8 @@ export default function AdminPackageOptionsPage() {
                 overlayLeft: form.overlayLeft || undefined,
                 overlayWidth: form.overlayWidth || undefined,
                 overlayZIndex: form.overlayZIndex ? Number(form.overlayZIndex) : undefined,
+                tableContext: (form.tableContext || undefined) as TableContextValue | undefined,
+                flowerSize: (form.flowerSize || undefined) as FlowerSizeValue | undefined,
             });
             setOptions((prev) => [...prev, created]);
             setCreateOpen(false);
@@ -163,6 +171,8 @@ export default function AdminPackageOptionsPage() {
                 overlayLeft: editForm.overlayLeft || undefined,
                 overlayWidth: editForm.overlayWidth || undefined,
                 overlayZIndex: editForm.overlayZIndex ? Number(editForm.overlayZIndex) : undefined,
+                tableContext: (editForm.tableContext || undefined) as TableContextValue | undefined,
+                flowerSize: (editForm.flowerSize || undefined) as FlowerSizeValue | undefined,
             });
             setOptions((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
             setEditTarget(null);
@@ -271,6 +281,31 @@ export default function AdminPackageOptionsPage() {
                         <input className="input" type="number" min="0" value={f.overlayZIndex}
                             onChange={(e) => set({ ...f, overlayZIndex: e.target.value })} />
                     </div>
+                </>
+            )}
+            {TABLE_CATEGORIES.includes(f.category) && (
+                <>
+                    <div className="form-field">
+                        <label>הקשר שולחן (Table Context)</label>
+                        <select className="input select" value={f.tableContext}
+                            onChange={(e) => set({ ...f, tableContext: e.target.value as OptionForm["tableContext"] })}>
+                            <option value="">— שניהם (ברירת מחדל) —</option>
+                            <option value="REGULAR">שולחן רגיל בלבד</option>
+                            <option value="KNIGHT">שולחן אביר בלבד</option>
+                            <option value="BOTH">שניהם</option>
+                        </select>
+                    </div>
+                    {f.category === "TABLE_FLOWER" && (
+                        <div className="form-field">
+                            <label>גודל פרח (Flower Size)</label>
+                            <select className="input select" value={f.flowerSize}
+                                onChange={(e) => set({ ...f, flowerSize: e.target.value as OptionForm["flowerSize"] })}>
+                                <option value="">— לא מוגדר (גדול) —</option>
+                                <option value="LARGE">פרח גדול</option>
+                                <option value="SMALL">פרח קטן (משני)</option>
+                            </select>
+                        </div>
+                    )}
                 </>
             )}
         </div>

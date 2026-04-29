@@ -82,6 +82,8 @@ public class PackageOptionService {
                 .overlayLeft(req.overlayLeft())
                 .overlayWidth(req.overlayWidth())
                 .overlayZIndex(req.overlayZIndex())
+                .tableContext(req.tableContext())
+                .flowerSize(req.flowerSize())
                 .build();
         return PackageOptionResponse.from(optionRepository.save(option));
     }
@@ -106,6 +108,8 @@ public class PackageOptionService {
         if (req.overlayLeft() != null)     option.setOverlayLeft(req.overlayLeft());
         if (req.overlayWidth() != null)    option.setOverlayWidth(req.overlayWidth());
         if (req.overlayZIndex() != null)   option.setOverlayZIndex(req.overlayZIndex());
+        if (req.tableContext() != null)    option.setTableContext(req.tableContext());
+        if (req.flowerSize() != null)      option.setFlowerSize(req.flowerSize());
 
         return PackageOptionResponse.from(optionRepository.save(option));
     }
