@@ -46,6 +46,12 @@ A full-stack web application for event hall businesses, allowing customers to bu
 
 The frontend Vite dev server proxies all `/api/*` requests to `http://localhost:8080`. The API client defaults to `/api` for relative URL usage.
 
+## Branding & Design
+
+- **Adama logo** (client) — used as the main navbar brand: `frontend/src/assets/logos/adama-logo.jpeg`
+- **JD logo** (developer) — small footer credit ("Crafted by JD"), dark-mode variant: `frontend/src/assets/logos/jd-logo.png`
+- **Design system** — elegant warm-cream/charcoal palette, Cormorant Garamond serif headings + Inter body, defined via CSS variables in `frontend/src/styles/global.css`.
+
 ## Key Notes
 
 - Java version set to 19 in pom.xml (Spring Boot 4 supports Java 19+)
