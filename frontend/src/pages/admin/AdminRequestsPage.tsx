@@ -41,7 +41,9 @@ export default function AdminRequestsPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
 
-    const initialTab = (searchParams.get("status") as FilterTab | null) ?? "ALL";
+    const VALID_TABS: FilterTab[] = ["ALL", "PENDING", "APPROVED", "REJECTED"];
+    const rawStatus = searchParams.get("status") as FilterTab | null;
+    const initialTab: FilterTab = rawStatus && VALID_TABS.includes(rawStatus) ? rawStatus : "ALL";
     const [requests, setRequests] = useState<PackageRequestSummaryResponse[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<FilterTab>(initialTab);
