@@ -1,5 +1,6 @@
 package com.eventhall.controller;
 
+import com.eventhall.dto.PackageOptionCategory;
 import com.eventhall.entity.PackageOption;
 import com.eventhall.repository.PackageOptionRepository;
 import com.jayway.jsonpath.JsonPath;
@@ -293,7 +294,10 @@ class AdminCustomerPriceOverrideControllerTest {
                 PackageOption.builder()
                         .nameHe("אפשרות בדיקה")
                         .nameEn("Test Option")
+                        .category(PackageOptionCategory.BRIDE_CHAIR)
                         .globalPrice(BigDecimal.valueOf(500))
+                        .imageUrl("/test/bride-chair.png")
+                        .visualBehavior("REPLACE_IMAGE")
                         .active(true)
                         .sortOrder(1)
                         .build()
